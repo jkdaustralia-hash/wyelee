@@ -1,0 +1,321 @@
+<!--meta {
+  "route": "furniture-assembly/",
+  "title": "Furniture Assembly Adelaide, Sydney, Brisbane, Perth | Wyelee",
+  "description": "IKEA and flatpack furniture assembled at home or office in Adelaide, Sydney, Brisbane, Perth and across Australia. Send your order, get a quote in 24 hours.",
+  "og": "og-home.jpg",
+  "crumb": "Furniture Assembly",
+  "nav": "furniture-assembly",
+  "service": {"name": "Furniture Assembly", "serviceType": "Flatpack furniture assembly", "description": "Assembly of IKEA and flatpack furniture from any brand at homes and offices in Adelaide, Sydney, Brisbane, Perth and across Australia. Built to the manufacturer's instructions, levelled, anchored where required, with a quote within 24 hours."}
+} -->
+{{CRUMBS}}
+<!-- ═══════════════ PAGE HERO — service picker + Fig. 1 ═══════════════ -->
+<section class="page-hero">
+  <div class="wrap split">
+    <div>
+      <p class="eyebrow">IKEA &amp; any flatpack brand</p>
+      <h1>Furniture assembly in Adelaide, Sydney, Brisbane, Perth and across Australia</h1>
+      <p class="lead">Any flatpack, any brand, at home or at the office. Tell us where you are and what&rsquo;s in the boxes and you&rsquo;ll have a quote within 24&nbsp;hours.</p>
+
+      <form class="picker" action="{{R}}quote/" method="get" aria-label="Start your furniture assembly quote">
+        <input type="hidden" name="svc" value="furniture">
+        <div>
+          <label class="plabel" for="pc"><b>1</b> Where are you?</label>
+          <input type="text" id="pc" name="pc" placeholder="Suburb or postcode, e.g. Norwood 5067" autocomplete="postal-code" inputmode="text">
+        </div>
+        <fieldset>
+          <legend class="plabel"><b>2</b> What&rsquo;s in the boxes?</legend>
+          <div class="tiles">
+            <label class="tile"><input type="checkbox" name="item" value="Bed frame"><span><svg class="pict" aria-hidden="true"><use href="#p-bed"/></svg>Bed frame</span></label>
+            <label class="tile"><input type="checkbox" name="item" value="Wardrobe"><span><svg class="pict" aria-hidden="true"><use href="#p-wardrobe"/></svg>Wardrobe</span></label>
+            <label class="tile"><input type="checkbox" name="item" value="Desk or office furniture"><span><svg class="pict" aria-hidden="true"><use href="#p-desk"/></svg>Desk / office</span></label>
+            <label class="tile"><input type="checkbox" name="item" value="Bookshelf"><span><svg class="pict" aria-hidden="true"><use href="#p-bookshelf"/></svg>Bookshelf</span></label>
+            <label class="tile"><input type="checkbox" name="item" value="Chest of drawers"><span><svg class="pict" aria-hidden="true"><use href="#p-drawers"/></svg>Chest of drawers</span></label>
+            <label class="tile"><input type="checkbox" name="item" value="Sofa or sofa bed"><span><svg class="pict" aria-hidden="true"><use href="#p-sofa"/></svg>Sofa / sofa bed</span></label>
+            <label class="tile tile-text"><span class="sr-only">Something else</span><input type="text" name="other" placeholder="Something else? Type it here" autocomplete="off"></label>
+          </div>
+        </fieldset>
+        <div>
+          <p class="plabel"><b>3</b> That&rsquo;s it</p>
+          <button class="btn btn-primary btn-lg" type="submit" data-hero-cta>Get my quote in 24 hours <svg class="ic" aria-hidden="true"><use href="#i-arrow"/></svg></button>
+        </div>
+        <p class="fine">No obligation. Photos and details come next &mdash; or text a photo of the box to <a href="sms:+61432470313">{{PHONE}}</a>.</p>
+      </form>
+    </div>
+
+    <div class="hero-fig">
+      <figure class="figure hero-photo">
+        <div class="photo-wide callouts">
+          <img src="{{R}}img/hero.jpg" srcset="{{R}}img/hero-m.jpg 800w, {{R}}img/hero.jpg 1536w" sizes="(min-width: 880px) 560px, 100vw" width="1536" height="1024" alt="Wyelee assembler tightening the last fitting on a white cube bookshelf in a living room" fetchpriority="high" decoding="async">
+          <div class="callout to-left rv" style="--x:61%;--y:63%;--i:0"><span class="pin"></span><span class="pill"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>Levelled before we leave</span></div>
+        </div>
+        <figcaption><span class="fig">Fig. 1</span><span>Squared and checked with a spirit level. Often same or next day, subject to availability.</span></figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ YOUR NEXT 24 HOURS — step sheet ═══════════════ -->
+<section class="section" id="how-it-works">
+  <div class="wrap">
+    <div class="split" style="align-items:end;margin-bottom:28px">
+      <div>
+        <p class="eyebrow">How it works</p>
+        <h2>Your next 24 hours</h2>
+      </div>
+      <p class="lead" style="margin:0">You do one thing. We do the rest &mdash; from checking your order to the last cam lock.</p>
+    </div>
+
+    <div class="stepsheet rv">
+      <div class="brackets" aria-hidden="true">
+        <div class="bracket you">You</div>
+        <div class="bracket">Wyelee</div>
+      </div>
+      <div class="sheet">
+        <div class="sheet-panel">
+          <p class="frame-tag"><b>1</b> Today</p>
+          <svg class="pict" aria-hidden="true"><use href="#p-phone-box"/></svg>
+          <h3>Send your order or a photo</h3>
+          <p>A screenshot of your IKEA order is enough. Add your suburb and postcode. That&rsquo;s your only step.</p>
+        </div>
+        <div class="sheet-panel">
+          <p class="frame-tag"><b>2</b> Within 24 hours</p>
+          <svg class="pict" aria-hidden="true"><use href="#p-quote-clock"/></svg>
+          <h3>You get your quote</h3>
+          <p>We check the items, quantities and access, then send you one clear price. No obligation.</p>
+        </div>
+        <div class="sheet-panel">
+          <p class="frame-tag"><b>3</b> Your chosen day</p>
+          <svg class="pict" aria-hidden="true"><use href="#p-level-key"/></svg>
+          <h3>We build it</h3>
+          <p>Our assembler arrives with every tool to assemble, level and anchor tall units where the instructions require it, and tidy the packaging.</p>
+        </div>
+      </div>
+      <div class="tape" aria-hidden="true">
+        <div class="rule"></div>
+        <div class="labels"><span>Today</span><span>Within 24 h</span><span>Your chosen day</span></div>
+      </div>
+      <p class="muted" style="margin:18px 0 0;max-width:60ch">Often same or next day, subject to availability. Pick your preferred days and times in the quote form.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ WHAT WE ASSEMBLE — item index ═══════════════ -->
+<section class="section bg-fog" id="what-we-assemble">
+  <div class="wrap">
+    <div class="split" style="align-items:end;margin-bottom:28px">
+      <div>
+        <p class="eyebrow">Index</p>
+        <h2>What we assemble</h2>
+      </div>
+      <p class="lead" style="margin:0">Not on the list? Type it in the &ldquo;Something else&rdquo; box and tell us.</p>
+    </div>
+    <div class="grid grid-2 rv" style="align-items:start">
+      <div>
+        <h3 style="display:flex;align-items:center;gap:10px;margin-bottom:6px"><svg class="ic" aria-hidden="true"><use href="#i-home"/></svg> At home</h3>
+        <ul class="index-list" style="columns:2">
+          <li>Bed frames</li>
+          <li>Bunk beds</li>
+          <li>Bedside tables</li>
+          <li>Chests of drawers</li>
+          <li><a href="{{R}}wardrobe-assembly/">Wardrobes &mdash; PAX and others</a></li>
+          <li>Dressing tables</li>
+          <li>Bookshelves and bookcases</li>
+          <li>TV units</li>
+          <li>Sideboards and buffets</li>
+          <li>Dining tables</li>
+          <li>Dining chairs</li>
+          <li>Coffee tables</li>
+          <li>Sofas</li>
+          <li>Sofa beds</li>
+          <li>Outdoor settings</li>
+          <li>Kids&rsquo; furniture</li>
+          <li>Cots, assembled to the instructions</li>
+          <li>Shelving units</li>
+          <li>Hallway storage</li>
+          <li>Shoe cabinets</li>
+        </ul>
+      </div>
+      <div>
+        <h3 style="display:flex;align-items:center;gap:10px;margin-bottom:6px"><svg class="ic" aria-hidden="true"><use href="#i-building"/></svg> At the office</h3>
+        <ul class="index-list" style="columns:2">
+          <li>Desks</li>
+          <li>Office chairs</li>
+          <li>Workstations</li>
+          <li>Meeting tables</li>
+          <li>Filing cabinets</li>
+          <li>Storage cupboards</li>
+          <li>Shelving and racking</li>
+          <li>Bookcases</li>
+          <li>Lockers</li>
+          <li>Break-room tables and chairs</li>
+        </ul>
+        <div class="note" style="margin-top:20px">
+          <svg class="ic" aria-hidden="true"><use href="#i-info"/></svg>
+          <p>Fitting out an office? Send the order and a photo of the room. We&rsquo;ll quote the whole job within 24 hours.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ INCLUDED / NOT INCLUDED — scope sheet ═══════════════ -->
+<section class="section" id="scope">
+  <div class="wrap">
+    <p class="eyebrow">Scope</p>
+    <h2>What&rsquo;s in the quote</h2>
+    <p class="lead" style="margin-bottom:28px">One clear price for the assembly. Add-ons are ticked in the quote form.</p>
+    <div class="scope rv">
+      <div class="scope-box yes">
+        <h3><svg class="ic" aria-hidden="true"><use href="#i-check-circle"/></svg> Included</h3>
+        <ul>
+          <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>Assembly to the manufacturer&rsquo;s instructions</li>
+          <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>All tools and equipment</li>
+          <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>Levelling, checked with a spirit level</li>
+          <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>Wall anchoring of tall units where the instructions require it</li>
+          <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>Packaging flattened and tidied</li>
+        </ul>
+      </div>
+      <div class="scope-box no">
+        <h3><svg class="ic" aria-hidden="true"><use href="#i-minus-circle"/></svg> Not included</h3>
+        <ul>
+          <li><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg>Removal of packaging &mdash; available as an add-on in the quote form</li>
+          <li><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg>Disposal of old furniture</li>
+          <li><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg>Wall-mounting of TVs</li>
+          <li><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg>Plumbing or electrical work</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ BRANDS — parts list ═══════════════ -->
+<section class="section-tight bg-fog" id="brands">
+  <div class="wrap">
+    <div class="split" style="align-items:start">
+      <div>
+        <p class="eyebrow">Any flatpack, any brand</p>
+        <h2>We assemble furniture from</h2>
+        <p class="lead">If it came flat in a box with a bag of fittings, we build it. IKEA is most of what we do, but far from all of it.</p>
+      </div>
+      <ul class="brands rv">
+        <li class="big"><span>IKEA</span><span class="qty">&times; most of our jobs</span></li>
+        <li><span>Fantastic Furniture</span><span class="qty">&times;</span></li>
+        <li><span>Officeworks</span><span class="qty">&times;</span></li>
+        <li><span>Bunnings</span><span class="qty">&times;</span></li>
+        <li><span>Harvey Norman</span><span class="qty">&times;</span></li>
+        <li><span>Amart Furniture</span><span class="qty">&times;</span></li>
+        <li><span>Kmart</span><span class="qty">&times;</span></li>
+        <li><span>Temple &amp; Webster</span><span class="qty">&times;</span></li>
+        <li><span>Other online stores</span><span class="qty">&times;</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ WHY BOOK AN ASSEMBLER — sign-off checklist ═══════════════ -->
+<section class="section signoff rv" id="why">
+  <div class="wrap split">
+    <figure class="figure">
+      <div class="photo-wide photo-placeholder" data-missing="result.jpg">Photo pending: result.jpg</div>
+      <figcaption><span class="fig">Fig. 2</span><span>Assembled, levelled, anchored, cardboard flattened.</span></figcaption>
+    </figure>
+    <div>
+      <p class="eyebrow">Why book an assembler</p>
+      <h2>The bag of fittings is the easy part</h2>
+      <p class="lead">What an assembler brings that the box doesn&rsquo;t.</p>
+      <ul class="checklist">
+        <li style="--k:0"><svg class="ic" aria-hidden="true"><use href="#i-check-circle"/></svg><div><strong>Every tool arrives with us</strong><p>Drill, spirit level, Allen keys and wall-anchoring fixings. You supply the boxes.</p></div></li>
+        <li style="--k:1"><svg class="ic" aria-hidden="true"><use href="#i-check-circle"/></svg><div><strong>Built to the instructions, in order</strong><p>Cam locks, dowels and hinges fitted the way the manual shows. Doors and drawers aligned before we call it done.</p></div></li>
+        <li style="--k:2"><svg class="ic" aria-hidden="true"><use href="#i-check-circle"/></svg><div><strong>Level, sturdy and anchored</strong><p>Checked with a spirit level, not by eye. Tall units fixed to the wall where the instructions call for it.</p></div></li>
+        <li style="--k:3"><svg class="ic" aria-hidden="true"><use href="#i-check-circle"/></svg><div><strong>A room you can use straight away</strong><p>Packaging flattened and tidied. Want it taken away? Tick the add-on in the quote form.</p></div></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ FAQ ═══════════════ -->
+<section class="section bg-fog" id="faq">
+  <div class="wrap-narrow">
+    <p class="eyebrow">Troubleshooting</p>
+    <h2>Furniture assembly questions</h2>
+    <div class="faq" style="margin-top:24px">
+      <details class="faq-item">
+        <summary>How long does furniture assembly take?</summary>
+        <div><p>It depends on the item and how many there are. A bedside table is quick; a bunk bed or a tall bookcase with doors takes longer, and a full office order longer again. Tell us your preferred days and times in the quote form and we&rsquo;ll confirm availability with your quote.</p></div>
+      </details>
+      <details class="faq-item">
+        <summary>Do I need to unpack the boxes before you arrive?</summary>
+        <div><p>No. Leave them sealed. We open each box, build to the manufacturer&rsquo;s instructions and flatten the packaging when we finish. Opening boxes early is how small fittings get lost.</p></div>
+      </details>
+      <details class="faq-item">
+        <summary>Do I need to be home?</summary>
+        <div><p>Someone needs to let us in and show us where things go. After that you can get on with your day.</p></div>
+      </details>
+      <details class="faq-item">
+        <summary>Do you assemble second-hand or partly assembled furniture?</summary>
+        <div><p>Yes, as long as the fittings are there. Tick &ldquo;Partially assembled&rdquo; or &ldquo;Already assembled&rdquo; in the quote form, add a photo and mention anything missing in the notes. If it needs dismantling first, see our <a href="{{R}}disassembly-service/">disassembly service</a>.</p></div>
+      </details>
+      <details class="faq-item">
+        <summary>Can you fix furniture to the wall?</summary>
+        <div><p>Yes, where the manufacturer&rsquo;s instructions require it &mdash; bookcases, wardrobes and chests of drawers in particular. If you know your wall type (plasterboard, brick or stud), mention it in the quote form. If you&rsquo;d like a unit anchored that the instructions don&rsquo;t call for, tick &ldquo;Wall anchoring&rdquo; in the add-ons.</p></div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ OTHER SERVICES — contents ledger ═══════════════ -->
+<section class="section" id="other-services">
+  <div class="wrap">
+    <p class="eyebrow">Contents</p>
+    <h2 style="margin-bottom:28px">Other services</h2>
+    <ul class="parts ledger rv">
+      <li><a href="{{R}}wardrobe-assembly/">
+        <span class="num">02</span>
+        <span class="pict-wrap pict"><svg class="pict" aria-hidden="true"><use href="#p-wardrobe"/></svg></span>
+        <span class="part-name">Wardrobe Assembly</span>
+        <p class="part-desc">IKEA PAX and other sliding-door, walk-in, free-standing and fitted wardrobes, anchored to the wall.</p>
+        <span class="part-go"><svg class="ic" aria-hidden="true"><use href="#i-arrow"/></svg></span>
+      </a></li>
+      <li><a href="{{R}}disassembly-service/">
+        <span class="num">03</span>
+        <span class="pict-wrap pict"><svg class="pict" aria-hidden="true"><use href="#p-drawers-tag"/></svg></span>
+        <span class="part-name">Disassembly Service</span>
+        <p class="part-desc">Moving? We dismantle carefully and bag and label every fitting per item, ready to go back together.</p>
+        <span class="part-go"><svg class="ic" aria-hidden="true"><use href="#i-arrow"/></svg></span>
+      </a></li>
+      <li><a href="{{R}}ikea-kitchen-assembly/">
+        <span class="num">04</span>
+        <span class="pict-wrap pict"><svg class="pict" aria-hidden="true"><use href="#p-kitchen"/></svg></span>
+        <span class="part-name">IKEA Kitchen Assembly</span>
+        <p class="part-desc">IKEA METOD cabinets assembled &mdash; carcasses, doors, drawers, hinges, legs and plinths.</p>
+        <span class="part-go"><svg class="ic" aria-hidden="true"><use href="#i-arrow"/></svg></span>
+      </a></li>
+    </ul>
+  </div>
+</section>
+
+<!-- ═══════════════ CTA SLIP ═══════════════ -->
+<section class="section-tight" id="start">
+  <div class="wrap">
+    <div class="slip rv">
+      <svg class="scissors pict" aria-hidden="true"><use href="#p-scissors"/></svg>
+      <div class="grid">
+        <div>
+          <p class="eyebrow">Start here</p>
+          <h2>Get your quote within 24 hours</h2>
+          <p>Tell us where and what. We&rsquo;ll check it and send your quote within 24 hours &mdash; the rest we sort out by phone or text.</p>
+          <div class="cta-row">
+            <a class="btn btn-primary btn-lg" href="{{R}}quote/">Get my quote <svg class="ic" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+            <a class="btn btn-ghost" href="sms:+61432470313"><svg class="ic" aria-hidden="true"><use href="#i-sms"/></svg> Text a photo to {{PHONE}}</a>
+          </div>
+        </div>
+        <ul class="rail">
+          <li><svg class="ic" aria-hidden="true"><use href="#i-phone"/></svg><a href="{{TEL}}">Call or text {{PHONE}}</a></li>
+          <li><svg class="ic" aria-hidden="true"><use href="#i-wa"/></svg><a href="{{WA}}" target="_blank" rel="noopener">WhatsApp us</a></li>
+          <li><svg class="ic" aria-hidden="true"><use href="#i-mail"/></svg><a href="mailto:{{EMAIL}}">{{EMAIL}}</a></li>
+          <li><svg class="ic" aria-hidden="true"><use href="#i-pin"/></svg><span>Sydney, Australia &middot; assemblers across Australia</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>

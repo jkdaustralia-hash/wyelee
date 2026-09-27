@@ -1,0 +1,11 @@
+_*
+!_src/
+!_build.py
+!_check.py
+!_components.md
+!_hero_svg.py
+!_map_svg.py
+!_img.py
+_screens/
+__pycache__/
+*.pyc

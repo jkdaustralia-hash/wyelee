@@ -1,0 +1,279 @@
+<!--meta {
+  "route": "",
+  "title": "IKEA & Flatpack Furniture Assembly Australia | Wyelee",
+  "description": "IKEA and flatpack furniture assembly in Adelaide, Sydney, Brisbane, Perth and across Australia. Tell us what is in your boxes and get a quote within 24 hours.",
+  "og": "og-home.jpg",
+  "nav": "home"
+} -->
+<!-- ═══════════════ HERO — parts-list picker ═══════════════ -->
+<section class="hero hero-picker">
+  <div class="wrap split">
+    <div>
+      <p class="eyebrow">IKEA &amp; flatpack furniture assembly</p>
+      <h1>Still in the box? We&rsquo;ll build&nbsp;it.</h1>
+      <p class="lead">Furniture assembly in Adelaide, Sydney, Brisbane, Perth and across Australia. Tell us where you are and what&rsquo;s in the boxes &mdash; you&rsquo;ll have a quote within 24&nbsp;hours.</p>
+
+      <form class="picker" action="{{R}}quote/" method="get" aria-label="Start your quote">
+        <div>
+          <label class="plabel" for="pc"><b>1</b> Where are you?</label>
+          <input type="text" id="pc" name="pc" placeholder="Suburb or postcode, e.g. Norwood 5067" autocomplete="postal-code" inputmode="text">
+        </div>
+        <fieldset>
+          <legend class="plabel"><b>2</b> What&rsquo;s in the boxes?</legend>
+          <div class="tiles">
+            <label class="tile"><input type="checkbox" name="item" value="Bed frame"><span><svg class="pict" aria-hidden="true"><use href="#p-bed"/></svg>Bed frame</span></label>
+            <label class="tile"><input type="checkbox" name="item" value="Wardrobe"><span><svg class="pict" aria-hidden="true"><use href="#p-wardrobe"/></svg>Wardrobe</span></label>
+            <label class="tile"><input type="checkbox" name="item" value="Desk or office furniture"><span><svg class="pict" aria-hidden="true"><use href="#p-desk"/></svg>Desk / office</span></label>
+            <label class="tile"><input type="checkbox" name="item" value="Bookshelf"><span><svg class="pict" aria-hidden="true"><use href="#p-bookshelf"/></svg>Bookshelf</span></label>
+            <label class="tile"><input type="checkbox" name="item" value="Chest of drawers"><span><svg class="pict" aria-hidden="true"><use href="#p-drawers"/></svg>Chest of drawers</span></label>
+            <label class="tile"><input type="checkbox" name="item" value="Sofa or sofa bed"><span><svg class="pict" aria-hidden="true"><use href="#p-sofa"/></svg>Sofa / sofa bed</span></label>
+            <label class="tile"><input type="checkbox" name="item" value="IKEA kitchen cabinets"><span><svg class="pict" aria-hidden="true"><use href="#p-kitchen"/></svg>Kitchen cabinets</span></label>
+            <label class="tile tile-text"><span class="sr-only">Something else</span><input type="text" name="other" placeholder="Something else? Type it here" autocomplete="off"></label>
+          </div>
+        </fieldset>
+        <div>
+          <p class="plabel"><b>3</b> That&rsquo;s it</p>
+          <button class="btn btn-primary btn-lg" type="submit" data-hero-cta>Get my quote in 24 hours <svg class="ic" aria-hidden="true"><use href="#i-arrow"/></svg></button>
+        </div>
+        <p class="fine">No obligation. Photos and details come next &mdash; or text a photo of the box to <a href="sms:+61432470313">{{PHONE}}</a>.</p>
+      </form>
+    </div>
+
+    <div class="hero-fig">
+      <figure class="figure hero-photo">
+        <div class="photo-sq callouts">
+          <img src="{{R}}img/hero.jpg" srcset="{{R}}img/hero-m.jpg 800w, {{R}}img/hero.jpg 1536w" sizes="(min-width: 880px) 560px, 100vw" width="1536" height="1024" alt="Wyelee assembler kneeling beside a white cube bookshelf in a bright living room, tightening the last fitting" fetchpriority="high" decoding="async">
+          <div class="callout to-right" style="--x:60%;--y:63%;--i:0"><span class="pin"></span><span class="pill"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>Levelled before we leave</span></div>
+          <div class="callout to-left desk" style="--x:94%;--y:84%;--i:1"><span class="pin"></span><span class="pill"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>Packaging flattened and tidied</span></div>
+        </div>
+        <figcaption><span class="fig">Fig. 1</span><span>The last cam lock. Often same or next day, subject to availability.</span></figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ YOUR NEXT 24 HOURS — step sheet ═══════════════ -->
+<section class="section" id="how-it-works">
+  <div class="wrap">
+    <div class="split" style="align-items:end;margin-bottom:28px">
+      <div>
+        <p class="eyebrow">How it works</p>
+        <h2>Your next 24 hours</h2>
+      </div>
+      <p class="lead" style="margin:0">You do one thing. We do the rest &mdash; from checking your order to the last cam lock.</p>
+    </div>
+
+    <div class="stepsheet rv">
+      <div class="brackets" aria-hidden="true">
+        <div class="bracket you">You</div>
+        <div class="bracket">Wyelee</div>
+      </div>
+      <div class="sheet">
+        <div class="sheet-panel">
+          <p class="frame-tag"><b>1</b> Today</p>
+          <svg class="pict" aria-hidden="true"><use href="#p-phone-box"/></svg>
+          <h3>Send your order or a photo</h3>
+          <p>A screenshot of your IKEA order is enough. Add your suburb and postcode. That&rsquo;s your only step.</p>
+        </div>
+        <div class="sheet-panel">
+          <p class="frame-tag"><b>2</b> Within 24 hours</p>
+          <svg class="pict" aria-hidden="true"><use href="#p-quote-clock"/></svg>
+          <h3>You get your quote</h3>
+          <p>We check the items, quantities and access, then send you one clear price. No obligation.</p>
+        </div>
+        <div class="sheet-panel">
+          <p class="frame-tag"><b>3</b> Your chosen day</p>
+          <svg class="pict" aria-hidden="true"><use href="#p-level-key"/></svg>
+          <h3>We build it</h3>
+          <p>Our assembler arrives with every tool, builds to the manufacturer&rsquo;s instructions, levels and anchors where required, and tidies the packaging.</p>
+        </div>
+      </div>
+      <div class="tape" aria-hidden="true">
+        <div class="rule"></div>
+        <div class="labels"><span>Today</span><span>Within 24 h</span><span>Your chosen day</span></div>
+      </div>
+      <p class="muted" style="margin:18px 0 0;max-width:60ch">Often same or next day, subject to availability. Pick your preferred days and times in the quote form.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ SERVICES — contents ledger ═══════════════ -->
+<section class="section bg-fog" id="services">
+  <div class="wrap">
+    <p class="eyebrow">Contents</p>
+    <h2>What we assemble</h2>
+    <p class="lead" style="margin-bottom:28px">Four services. Furniture assembly is the big one &mdash; any flatpack, any brand, at home or at the office.</p>
+    <ul class="parts ledger rv">
+      <li><a href="{{R}}furniture-assembly/">
+        <span class="num">01</span>
+        <span class="pict-wrap pict"><svg class="pict" aria-hidden="true"><use href="#p-bed"/></svg></span>
+        <span class="part-name">Furniture Assembly</span>
+        <p class="part-desc">Beds, desks, drawers, bookshelves, TV units, sofas, outdoor and office furniture &mdash; any flatpack, any brand.</p>
+        <span class="part-go"><svg class="ic" aria-hidden="true"><use href="#i-arrow"/></svg></span>
+      </a></li>
+      <li><a href="{{R}}wardrobe-assembly/">
+        <span class="num">02</span>
+        <span class="pict-wrap pict"><svg class="pict" aria-hidden="true"><use href="#p-wardrobe"/></svg></span>
+        <span class="part-name">Wardrobe Assembly</span>
+        <p class="part-desc">IKEA PAX and other sliding-door, walk-in, free-standing and fitted wardrobes, anchored to the wall.</p>
+        <span class="part-go"><svg class="ic" aria-hidden="true"><use href="#i-arrow"/></svg></span>
+      </a></li>
+      <li><a href="{{R}}disassembly-service/">
+        <span class="num">03</span>
+        <span class="pict-wrap pict"><svg class="pict" aria-hidden="true"><use href="#p-drawers-tag"/></svg></span>
+        <span class="part-name">Disassembly Service</span>
+        <p class="part-desc">Moving? We dismantle carefully and bag and label every fitting per item, ready to go back together.</p>
+        <span class="part-go"><svg class="ic" aria-hidden="true"><use href="#i-arrow"/></svg></span>
+      </a></li>
+      <li><a href="{{R}}ikea-kitchen-assembly/">
+        <span class="num">04</span>
+        <span class="pict-wrap pict"><svg class="pict" aria-hidden="true"><use href="#p-kitchen"/></svg></span>
+        <span class="part-name">IKEA Kitchen Assembly</span>
+        <p class="part-desc">IKEA METOD cabinets assembled &mdash; carcasses, doors, drawers, hinges, legs and plinths.</p>
+        <span class="part-go"><svg class="ic" aria-hidden="true"><use href="#i-arrow"/></svg></span>
+      </a></li>
+    </ul>
+  </div>
+</section>
+
+<!-- ═══════════════ SIGN-OFF — trust without numbers ═══════════════ -->
+<section class="section signoff rv" id="sign-off">
+  <div class="wrap split">
+    <figure class="figure xv-frame">
+      <!-- Fig. 2 — exploded view that assembles itself when in view (generated by _hero_svg.py) -->
+      {{XV}}
+      <figcaption><span class="fig">Fig. 2</span><span>Assembled, levelled, anchored.</span><button class="replay" type="button" data-replay=".xv" aria-label="Replay the assembly animation">Replay</button></figcaption>
+    </figure>
+    <div>
+      <p class="eyebrow">Before we leave</p>
+      <h2>The sign-off check</h2>
+      <p class="lead">Every job ends the same way. We don&rsquo;t leave until each line is ticked.</p>
+      <ul class="checklist">
+        <li style="--k:0"><svg class="ic" aria-hidden="true"><use href="#i-check-circle"/></svg><div><strong>Level and square</strong><p>Checked with a spirit level, not by eye.</p></div></li>
+        <li style="--k:1"><svg class="ic" aria-hidden="true"><use href="#i-check-circle"/></svg><div><strong>Sturdy &mdash; every fitting tightened</strong><p>Built to the manufacturer&rsquo;s instructions, nothing skipped.</p></div></li>
+        <li style="--k:2"><svg class="ic" aria-hidden="true"><use href="#i-check-circle"/></svg><div><strong>Anchored where required</strong><p>Tall units fixed to the wall when the instructions call for it.</p></div></li>
+        <li style="--k:3"><svg class="ic" aria-hidden="true"><use href="#i-check-circle"/></svg><div><strong>All tools supplied</strong><p>You don&rsquo;t need to own a screwdriver.</p></div></li>
+        <li style="--k:4"><svg class="ic" aria-hidden="true"><use href="#i-check-circle"/></svg><div><strong>Packaging flattened and tidied</strong><p>Want it taken away? Tick it in the quote form.</p></div></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ BRANDS — parts list ═══════════════ -->
+<section class="section-tight bg-fog" id="brands">
+  <div class="wrap">
+    <div class="split" style="align-items:start">
+      <div>
+        <p class="eyebrow">Any flatpack, any brand</p>
+        <h2>We assemble furniture from</h2>
+        <p class="lead">If it came flat in a box with a bag of fittings, we build it. IKEA first &mdash; and any other flatpack brand.</p>
+      </div>
+      <ul class="brands rv">
+        <li class="big"><span>IKEA</span></li>
+        <li><span>Fantastic Furniture</span></li>
+        <li><span>Officeworks</span></li>
+        <li><span>Bunnings</span></li>
+        <li><span>Harvey Norman</span></li>
+        <li><span>Amart Furniture</span></li>
+        <li><span>Kmart</span></li>
+        <li><span>Temple &amp; Webster</span></li>
+        <li><span>Other online stores</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ COVERAGE — where we work ═══════════════ -->
+<section class="section" id="areas">
+  <div class="wrap">
+    <div class="coverage">
+      <div class="rv">
+        {{MAP}}
+      </div>
+      <div class="rv rv-d1">
+        <p class="eyebrow">Where we work</p>
+        <h2>Adelaide, Sydney, Brisbane, Perth &mdash; and across Australia</h2>
+        <ol class="key">
+          <li><strong>Adelaide</strong><p>Furniture assembly at your home or office across the metro area.</p></li>
+          <li><strong>Sydney</strong><p>Residential and commercial assemblies, from studio apartments to fit-outs.</p></li>
+          <li><strong>Brisbane</strong><p>Beds, wardrobes, desks and more, assembled on your chosen day.</p></li>
+          <li><strong>Perth</strong><p>The same service, the same sign-off check.</p></li>
+          <li><strong>Somewhere else?</strong><p>Send your postcode. We&rsquo;ll tell you within 24 hours whether we can get an assembler to you.</p></li>
+        </ol>
+        <form class="pc-form" action="{{R}}quote/" method="get">
+          <label class="sr-only" for="pc2">Your suburb or postcode</label>
+          <input type="text" id="pc2" name="pc" placeholder="Your suburb or postcode" autocomplete="postal-code">
+          <button class="btn btn-navy" type="submit">Start my quote</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ FAQ ═══════════════ -->
+<section class="section bg-fog" id="faq">
+  <div class="wrap-narrow">
+    <p class="eyebrow">Troubleshooting</p>
+    <h2>Questions people ask before they book</h2>
+    <div class="faq" style="margin-top:24px">
+      <details class="faq-item">
+        <summary>How does the 24-hour quote work?</summary>
+        <div><p>Send us your suburb and postcode, what&rsquo;s in the boxes and, ideally, a photo or a screenshot of your order. We check the items, quantities and access and reply with your quote within 24 hours. There&rsquo;s no obligation.</p></div>
+      </details>
+      <details class="faq-item">
+        <summary>What do you need from me to quote?</summary>
+        <div><p>Three things: where you are (suburb and postcode), what needs assembling (product names, article numbers or links, with quantities) and whether the items are new in the box, partly assembled or need dismantling. A screenshot of your IKEA order covers most of it.</p></div>
+      </details>
+      <details class="faq-item">
+        <summary>Do I need to have any tools?</summary>
+        <div><p>No. Our assemblers bring every tool and piece of equipment the job needs, including what&rsquo;s required to anchor furniture to the wall.</p></div>
+      </details>
+      <details class="faq-item">
+        <summary>Do you only assemble IKEA furniture?</summary>
+        <div><p>No &mdash; IKEA first, and flatpack furniture from Fantastic Furniture, Officeworks, Bunnings, Harvey Norman, Amart, Kmart, Temple &amp; Webster and other online stores.</p></div>
+      </details>
+      <details class="faq-item">
+        <summary>Will you anchor tall furniture to the wall?</summary>
+        <div><p>Yes. Bookcases, wardrobes and chests of drawers are fixed to the wall wherever the manufacturer&rsquo;s instructions require it. If you know your wall type (plasterboard, brick, stud), mention it in the quote form.</p></div>
+      </details>
+      <details class="faq-item">
+        <summary>What happens to the packaging?</summary>
+        <div><p>We flatten and tidy the cardboard and packaging before we leave. If you&rsquo;d like it taken away, tick &ldquo;Packaging removal&rdquo; in the quote form and we&rsquo;ll include it in your quote.</p></div>
+      </details>
+      <details class="faq-item">
+        <summary>Can you come on a weekend or after hours?</summary>
+        <div><p>Tell us your preferred days and times in the quote form and we&rsquo;ll confirm availability with your quote. Bookings are often same or next day, subject to availability.</p></div>
+      </details>
+      <details class="faq-item">
+        <summary>Do you work with businesses?</summary>
+        <div><p>Yes. Offices, shops and rentals: desks, shelving, storage and workstations, assembled and anchored to suit the space.</p></div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ CTA SLIP ═══════════════ -->
+<section class="section-tight" id="start">
+  <div class="wrap">
+    <div class="slip rv">
+      <svg class="scissors pict" aria-hidden="true"><use href="#p-scissors"/></svg>
+      <div class="grid">
+        <div>
+          <p class="eyebrow">Start here</p>
+          <h2>Get your quote within 24 hours</h2>
+          <p>Tell us where and what. We&rsquo;ll check it and send your quote within 24 hours &mdash; the rest we sort out by phone or text.</p>
+          <div class="cta-row">
+            <a class="btn btn-primary btn-lg" href="{{R}}quote/">Get my quote <svg class="ic" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+            <a class="btn btn-ghost" href="sms:+61432470313"><svg class="ic" aria-hidden="true"><use href="#i-sms"/></svg> Text a photo to {{PHONE}}</a>
+          </div>
+        </div>
+        <ul class="rail">
+          <li><svg class="ic" aria-hidden="true"><use href="#i-phone"/></svg><a href="{{TEL}}">Call or text {{PHONE}}</a></li>
+          <li><svg class="ic" aria-hidden="true"><use href="#i-wa"/></svg><a href="{{WA}}" target="_blank" rel="noopener">WhatsApp us</a></li>
+          <li><svg class="ic" aria-hidden="true"><use href="#i-mail"/></svg><a href="mailto:{{EMAIL}}">{{EMAIL}}</a></li>
+          <li><svg class="ic" aria-hidden="true"><use href="#i-pin"/></svg><span>Sydney, Australia &middot; assemblers across Australia</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>

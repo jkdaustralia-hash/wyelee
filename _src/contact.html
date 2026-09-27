@@ -1,0 +1,112 @@
+<!--meta {
+  "route": "contact/",
+  "title": "Contact Wyelee — Call, Text or WhatsApp 0432 470 313",
+  "description": "Reach Wyelee about IKEA and flatpack furniture assembly: call or text 0432 470 313, WhatsApp us, or email Kenleong23@wyeleeassembly.com.au. Sydney, Australia.",
+  "og": "og-home.jpg",
+  "crumb": "Contact",
+  "nav": "contact"
+} -->
+{{CRUMBS}}
+<!-- ═══════════════ HEADER + CONTACT RAIL ═══════════════ -->
+<section class="page-hero">
+  <div class="wrap">
+    <p class="eyebrow">Contact</p>
+    <h1>Call, text or WhatsApp &mdash; whichever is easier</h1>
+    <p class="lead">For a quote, the quickest route is the <a href="{{R}}quote/">quote form</a>. For anything else, here is how to reach us.</p>
+
+    <!-- one white sheet (same device as the quote sheet) carrying the contact rail -->
+    <div class="form-card contact-sheet rv" style="margin-top:32px">
+      <ul class="rail rail-notes">
+        <li>
+          <svg class="ic" aria-hidden="true"><use href="#i-phone"/></svg>
+          <a href="{{TEL}}">Call or text {{PHONE}}</a>
+          <p>Most customers text. A photo of the box and your suburb is a good start.</p>
+        </li>
+        <li>
+          <svg class="ic" aria-hidden="true"><use href="#i-wa"/></svg>
+          <a href="{{WA}}" target="_blank" rel="noopener">WhatsApp us</a>
+          <p>Opens a chat with the first line already typed. Add your suburb, what&rsquo;s in the boxes and a photo.</p>
+        </li>
+        <li>
+          <svg class="ic" aria-hidden="true"><use href="#i-mail"/></svg>
+          <a href="mailto:{{EMAIL}}">{{EMAIL}}</a>
+          <p>Best for order screenshots, article numbers and longer lists of items.</p>
+        </li>
+        <li>
+          <svg class="ic" aria-hidden="true"><use href="#i-pin"/></svg>
+          <span>Sydney, Australia &middot; assemblers in Adelaide, Sydney, Brisbane, Perth and across Australia</span>
+          <p>We come to your home or workplace. Not sure we cover your area? Send your postcode and we&rsquo;ll tell you.</p>
+        </li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ MESSAGE FORM + WHERE WE WORK ═══════════════ -->
+<section class="section" id="message">
+  <div class="wrap split" style="align-items:start">
+    <form class="form form-card rv" data-lead="contact" data-endpoint="" method="post" novalidate aria-labelledby="msg-h">
+      <div class="form-body">
+       <div style="display:grid;gap:18px">
+        <div>
+          <p class="eyebrow">Message</p>
+          <h2 id="msg-h" style="margin-bottom:.3em">Send us a message</h2>
+          <p class="muted" style="margin:0">Three fields, nothing more. If you want a price, the <a href="{{R}}quote/">quote form</a> asks for the details we need to quote.</p>
+        </div>
+        <div class="field">
+          <label for="c-name">Name</label>
+          <input type="text" id="c-name" name="name" required autocomplete="name">
+          <span class="error">Please tell us your name.</span>
+        </div>
+        <div class="field">
+          <label for="c-contact">Mobile or email</label>
+          <input type="text" id="c-contact" name="contact" required autocomplete="on" placeholder="Your mobile number or email address">
+          <span class="hint">Whichever you check more often.</span>
+          <span class="error">We need a mobile number or an email address to reply.</span>
+        </div>
+        <div class="field">
+          <label for="c-message">Message</label>
+          <textarea id="c-message" name="message" required rows="5" placeholder="e.g. I have a question about re-assembling a PAX wardrobe after a move."></textarea>
+          <span class="hint">Helpful to include: your suburb, the item (product name or article number) and what you&rsquo;d like to know.</span>
+          <span class="error">Please write a short message.</span>
+        </div>
+        <div class="hp" aria-hidden="true">
+          <label for="c-website">Website</label>
+          <input type="text" id="c-website" name="website" tabindex="-1" autocomplete="off">
+        </div>
+        <div class="form-foot">
+          <button class="btn btn-primary btn-lg" type="submit">Send message <svg class="ic" aria-hidden="true"><use href="#i-arrow"/></svg></button>
+          <noscript><p class="fine">This form needs JavaScript. Text or WhatsApp us on <a href="{{TEL}}">{{PHONE}}</a> (<a href="{{WA}}" target="_blank" rel="noopener">WhatsApp</a>) and we will take it from there.</p></noscript>
+          <p class="fine">If this opens WhatsApp, your message is already typed &mdash; just press send.</p>
+        </div>
+       </div>
+      </div>
+      <div class="form-status" role="status" aria-live="polite"></div>
+      <div class="form-success" tabindex="-1">
+        <svg class="ic" aria-hidden="true"><use href="#i-check-circle"/></svg>
+        <h2>Thanks &mdash; we have your message.</h2>
+        <p data-extra></p>
+        <p class="muted">We&rsquo;ll reply by text, WhatsApp or email. In a hurry? Call or text <a href="{{TEL}}">{{PHONE}}</a>.</p>
+        <a class="btn btn-primary" data-wa-link href="{{WA}}" target="_blank" rel="noopener">Open WhatsApp</a>
+      </div>
+    </form>
+
+    <div class="rv rv-d1">
+      <p class="eyebrow">Where we work</p>
+      <h2>Adelaide, Sydney, Brisbane, Perth &mdash; and across Australia</h2>
+      <figure class="figure" style="margin-top:20px">
+        <div class="rv">
+          {{MAP}}
+        </div>
+        <figcaption><span class="fig">Fig. 1</span><span>Sydney, Australia. Assemblers in Adelaide, Sydney, Brisbane and Perth, and in other cities across Australia &mdash; send your postcode.</span></figcaption>
+      </figure>
+      <div class="note" style="margin-top:24px">
+        <svg class="ic" aria-hidden="true"><use href="#i-info"/></svg>
+        <p>Want a quote? Use the quote form &mdash; it asks exactly what we need and you&rsquo;ll hear back within 24 hours.</p>
+      </div>
+      <div class="cta-row" style="margin-top:16px">
+        <a class="btn btn-primary" href="{{R}}quote/">Get my quote in 24 hours <svg class="ic" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,260 @@
+<!--meta {
+  "route": "quote/",
+  "title": "Get a Quote within 24 Hours — Furniture Assembly | Wyelee",
+  "description": "Send your suburb, what needs assembling and your preferred days. Wyelee checks it and sends your furniture assembly quote within 24 hours. No obligation.",
+  "og": "og-home.jpg",
+  "crumb": "Get a quote",
+  "nav": "quote",
+  "css": ["css/quote.css"],
+  "js": ["js/quote.js"]
+} -->
+{{CRUMBS}}
+<!-- ═══════════════ HEADER — compact ═══════════════ -->
+<section class="page-hero quote-head">
+  <div class="wrap">
+    <p class="eyebrow">Start here</p>
+    <h1>Get your quote within 24&nbsp;hours</h1>
+    <p class="lead">Tell us where, what and when. We check it and send your quote within 24 hours &mdash; the rest we sort out by phone or text.</p>
+    <!-- mobile-only strip: stands in for the right rail below 1024px -->
+    <div class="quote-strip">
+      <div class="tape">
+        <div class="rule" aria-hidden="true"></div>
+        <div class="labels"><span>Today</span><span>Within 24 h</span><span>Your chosen day</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ THE WHOLE SHEET ON ONE PAGE — form + live quote sheet ═══════════════ -->
+<section class="section-tight quote-section" id="quote-form">
+  <div class="wrap quote-layout">
+    <div class="quote-main">
+      <form class="form qform" data-lead="quote" data-endpoint="" novalidate enctype="multipart/form-data" method="post">
+        <div class="form-body">
+
+          <!-- 1 · Where -->
+          <fieldset class="step-panel form-card">
+            <legend><span class="legend-pict" aria-hidden="true"><svg class="pict"><use href="#p-phone-box"/></svg></span>1 &middot; Where</legend>
+            <div class="form-row">
+              <div class="field">
+                <label for="q-suburb">Suburb</label>
+                <input type="text" id="q-suburb" name="suburb" autocomplete="address-level2" placeholder="e.g. Norwood" required>
+                <span class="error" id="q-suburb-err">Enter your suburb.</span>
+              </div>
+              <div class="field">
+                <label for="q-postcode">Postcode</label>
+                <input type="text" id="q-postcode" name="postcode" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" autocomplete="postal-code" placeholder="e.g. 5067" required>
+                <span class="error" id="q-postcode-err">Enter your postcode.</span>
+              </div>
+            </div>
+            <div class="field">
+              <label for="q-city">City or region</label>
+              <select id="q-city" name="city">
+                <option value="">Choose a city or region</option>
+                <option value="Adelaide">Adelaide</option>
+                <option value="Sydney">Sydney</option>
+                <option value="Brisbane">Brisbane</option>
+                <option value="Perth">Perth</option>
+                <option value="Melbourne">Melbourne</option>
+                <option value="Other (Australia)">Other (Australia)</option>
+              </select>
+              <span class="hint">Somewhere else in Australia? Choose Other &mdash; we have assemblers in other cities and will confirm within 24 hours.</span>
+            </div>
+          </fieldset>
+
+          <!-- 2 · What -->
+          <fieldset class="step-panel form-card">
+            <legend><span class="legend-pict" aria-hidden="true"><svg class="pict"><use href="#p-box"/></svg></span>2 &middot; What</legend>
+            <fieldset class="field">
+              <legend class="label">Service</legend>
+              <div class="choices">
+                <label class="choice"><input type="radio" name="service" value="furniture" required><span><svg class="svc" aria-hidden="true"><use href="#p-bed"/></svg>Furniture assembly</span></label>
+                <label class="choice"><input type="radio" name="service" value="wardrobe"><span><svg class="svc" aria-hidden="true"><use href="#p-wardrobe"/></svg>Wardrobe assembly</span></label>
+                <label class="choice"><input type="radio" name="service" value="disassembly"><span><svg class="svc" aria-hidden="true"><use href="#p-drawers-tag"/></svg>Disassembly</span></label>
+                <label class="choice"><input type="radio" name="service" value="kitchen"><span><svg class="svc" aria-hidden="true"><use href="#p-kitchen"/></svg>IKEA kitchen</span></label>
+              </div>
+              <span class="error" id="q-service-err">Choose a service.</span>
+              <span class="hint">Not sure? Furniture assembly covers most flatpack. IKEA kitchen means METOD cabinets only &mdash; <a href="{{R}}ikea-kitchen-assembly/">see what&rsquo;s included</a>.</span>
+            </fieldset>
+            <div class="field">
+              <label for="q-items">What needs assembling?</label>
+              <span class="hint" id="q-items-hint">Product name, article number or link &mdash; one per line, with quantity</span>
+              <textarea id="q-items" name="items" rows="5" placeholder="e.g. IKEA PAX wardrobe, sliding doors &times; 1&#10;MALM chest of drawers &times; 2" aria-describedby="q-items-hint" required></textarea>
+              <span class="error" id="q-items-err">Tell us what needs assembling &mdash; one item per line.</span>
+            </div>
+            <fieldset class="field">
+              <legend class="label">Condition</legend>
+              <div class="choices">
+                <label class="choice"><input type="radio" name="condition" value="New in the box"><span>New in the box</span></label>
+                <label class="choice"><input type="radio" name="condition" value="Partially assembled"><span>Partially assembled</span></label>
+                <label class="choice"><input type="radio" name="condition" value="Already assembled — needs disassembly"><span>Already assembled &mdash; needs disassembly</span></label>
+              </div>
+            </fieldset>
+            <div class="field">
+              <label for="q-photos">Photos <span class="opt">(optional)</span></label>
+              <span class="hint" id="q-photos-hint">Photos or a screenshot of your order. Up to 10 MB each.</span>
+              <input type="file" id="q-photos" name="photos" multiple accept="image/*" aria-describedby="q-photos-hint">
+              <span class="error" id="q-photos-err">One of your photos is over 10 MB. Choose a smaller file, or text it to {{PHONE}} after you send the form.</span>
+              <span class="hint" data-photo-list hidden></span>
+            </div>
+          </fieldset>
+
+          <!-- 3 · When and who -->
+          <fieldset class="step-panel form-card">
+            <legend><span class="legend-pict i24" aria-hidden="true"><svg class="pict"><use href="#i-calendar"/></svg></span>3 &middot; When and who</legend>
+            <div class="form-row">
+              <fieldset class="field">
+                <legend class="label">Preferred days</legend>
+                <div class="choices">
+                  <label class="choice"><input type="radio" name="days" value="Weekdays"><span>Weekdays</span></label>
+                  <label class="choice"><input type="radio" name="days" value="Weekend"><span>Weekend</span></label>
+                  <label class="choice"><input type="radio" name="days" value="Either"><span>Either</span></label>
+                </div>
+              </fieldset>
+              <fieldset class="field">
+                <legend class="label">Preferred time</legend>
+                <div class="choices">
+                  <label class="choice"><input type="radio" name="time" value="Morning"><span>Morning</span></label>
+                  <label class="choice"><input type="radio" name="time" value="Afternoon"><span>Afternoon</span></label>
+                  <label class="choice"><input type="radio" name="time" value="Either"><span>Either</span></label>
+                </div>
+              </fieldset>
+            </div>
+            <div class="form-row">
+              <div class="field">
+                <label for="q-name">Name</label>
+                <input type="text" id="q-name" name="name" autocomplete="name" required>
+                <span class="error" id="q-name-err">Enter your name.</span>
+              </div>
+              <div class="field">
+                <label for="q-mobile">Mobile</label>
+                <input type="tel" id="q-mobile" name="mobile" inputmode="tel" autocomplete="tel" required>
+                <span class="error" id="q-mobile-err">Enter a mobile number we can text.</span>
+              </div>
+            </div>
+            <div class="field">
+              <label for="q-email">Email</label>
+              <input type="email" id="q-email" name="email" autocomplete="email" required>
+              <span class="error" id="q-email-err">Enter a valid email address.</span>
+            </div>
+            <div class="field">
+              <label for="q-notes">Notes <span class="opt">(optional)</span></label>
+              <textarea id="q-notes" name="notes" rows="3" placeholder="e.g. 3rd floor, no lift" data-label="Notes"></textarea>
+            </div>
+            <fieldset class="field">
+              <legend class="label">Add-ons <span class="opt">(optional)</span></legend>
+              <div class="choices">
+                <label class="choice"><input type="checkbox" name="addons" value="Packaging removal" data-label="Add-ons"><span><svg class="ic" aria-hidden="true"><use href="#i-recycle"/></svg>Packaging removal</span></label>
+                <label class="choice"><input type="checkbox" name="addons" value="Wall anchoring" data-label="Add-ons"><span><svg class="ic" aria-hidden="true"><use href="#i-anchor"/></svg>Wall anchoring</span></label>
+                <label class="choice"><input type="checkbox" name="addons" value="Disassembly of old furniture" data-label="Add-ons"><span><svg class="ic" aria-hidden="true"><use href="#i-tools"/></svg>Disassembly of old furniture</span></label>
+              </div>
+              <span class="hint">Tick anything you&rsquo;d like included in the quote.</span>
+            </fieldset>
+          </fieldset>
+
+          <div class="hp" aria-hidden="true"><label for="q-website">Website</label><input type="text" id="q-website" name="website" tabindex="-1" autocomplete="off"></div>
+
+          <noscript><div class="note"><p>JavaScript is off in your browser, so this form can&rsquo;t send. Text a photo to <a href="sms:+61432470313">0432 470 313</a> or <a href="{{WA}}">WhatsApp us</a> and we&rsquo;ll quote from there.</p></div></noscript>
+<div class="form-foot">
+            <button class="btn btn-primary btn-lg" type="submit">Get my quote in 24 hours</button>
+            <p class="fine">You&rsquo;ll hear back within 24 hours. No obligation.</p>
+          </div>
+        </div><!-- /.form-body -->
+
+        <div class="form-status" role="status" aria-live="polite"></div>
+
+        <div class="form-success" tabindex="-1">
+          <svg class="ic" aria-hidden="true"><use href="#i-check-circle"/></svg>
+          <h2>Thanks &mdash; your quote is on its way within 24 hours.</h2>
+          <p data-extra></p>
+          <p class="muted">Want it sooner? Text your photos to <a href="sms:+61432470313">{{PHONE}}</a>.</p>
+          <a class="btn btn-primary" data-wa-link href="{{WA}}" target="_blank" rel="noopener">Open WhatsApp</a>
+        </div>
+      </form>
+    </div>
+
+    <!-- right rail: live quote sheet (desktop only) -->
+    <aside class="quote-rail" aria-label="Your quote sheet">
+      <div class="quote-sheet form-card" data-quote-sheet>
+        <svg class="scissors pict" aria-hidden="true"><use href="#p-scissors"/></svg>
+        <h2>Your quote sheet</h2>
+        <p class="qs-sub">What you&rsquo;re sending us.</p>
+        <dl class="qs-rows">
+          <div><dt>Where</dt><dd class="is-empty" data-qs="where">&mdash;</dd></div>
+          <div><dt>Service</dt><dd class="is-empty" data-qs="service">&mdash;</dd></div>
+          <div><dt>Items</dt><dd class="is-empty" data-qs="items">&mdash;</dd></div>
+          <div><dt>Condition</dt><dd class="is-empty" data-qs="condition">&mdash;</dd></div>
+          <div><dt>Days &amp; time</dt><dd class="is-empty" data-qs="when">&mdash;</dd></div>
+          <div><dt>Add-ons</dt><dd class="is-empty" data-qs="addons">&mdash;</dd></div>
+        </dl>
+        <p class="qs-foot"><svg class="ic" aria-hidden="true"><use href="#i-clock"/></svg>Quote within 24 hours</p>
+      </div>
+      <div class="quote-next">
+        <p class="fig">What happens next</p>
+        <div class="tape">
+          <div class="rule" aria-hidden="true"></div>
+          <div class="labels"><span>Today</span><span>Within 24 h</span><span>Your chosen day</span></div>
+        </div>
+        <ul class="quote-links">
+          <li><svg class="ic" aria-hidden="true"><use href="#i-sms"/></svg><a href="sms:+61432470313">Text a photo to {{PHONE}}</a></li>
+          <li><svg class="ic" aria-hidden="true"><use href="#i-wa"/></svg><a href="{{WA}}" target="_blank" rel="noopener">WhatsApp us</a></li>
+        </ul>
+        <div class="note"><svg class="ic" aria-hidden="true"><use href="#i-info"/></svg><p>A screenshot of your order is enough.</p></div>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<!-- ═══════════════ WHAT WE CHECK + NOTES ═══════════════ -->
+<section class="section bg-fog signoff rv" id="before-you-send">
+  <div class="wrap">
+    <div class="split" style="align-items:start">
+      <div>
+        <p class="eyebrow">What we check</p>
+        <h2>How your quote is put together</h2>
+        <p class="lead">These are the things we look at before we reply with one clear price. The more of them you cover, the fewer questions we need to text you.</p>
+        <ul class="checklist">
+          <li style="--k:0"><svg class="ic" aria-hidden="true"><use href="#i-check-circle"/></svg><div><strong>Items and quantities</strong><p>Product names, article numbers, links or a screenshot of your order tell us what&rsquo;s in the boxes and how many.</p></div></li>
+          <li style="--k:1"><svg class="ic" aria-hidden="true"><use href="#i-check-circle"/></svg><div><strong>Condition</strong><p>New in the box, partly assembled, or already built and needing disassembly first &mdash; each is a different job.</p></div></li>
+          <li style="--k:2"><svg class="ic" aria-hidden="true"><use href="#i-check-circle"/></svg><div><strong>Access</strong><p>Stairs, lifts, parking and where the furniture is going. A line in the notes is enough.</p></div></li>
+          <li style="--k:3"><svg class="ic" aria-hidden="true"><use href="#i-check-circle"/></svg><div><strong>Anchoring and add-ons</strong><p>Tall units are anchored where the manufacturer&rsquo;s instructions require it. Packaging removal and disassembly of old furniture go into your quote when you tick them.</p></div></li>
+        </ul>
+        <p class="muted" style="margin-top:20px">Prefer to skip the form? Either of these works just as well.</p>
+        <div class="cta-row">
+          <a class="btn btn-ghost" href="sms:+61432470313"><svg class="ic" aria-hidden="true"><use href="#i-sms"/></svg> Text a photo to {{PHONE}}</a>
+          <a class="btn btn-ghost" href="{{WA}}" target="_blank" rel="noopener"><svg class="ic" aria-hidden="true"><use href="#i-wa"/></svg> WhatsApp us</a>
+        </div>
+      </div>
+      <div>
+        <p class="eyebrow">Notes</p>
+        <h2>Questions about quoting</h2>
+        <div class="faq" style="margin-top:24px">
+          <details class="faq-item">
+            <summary>I don&rsquo;t know the article number. What should I send?</summary>
+            <div><p>The product name and where you bought it is enough &mdash; for example &ldquo;IKEA MALM chest of drawers&rdquo; or &ldquo;Fantastic Furniture queen bed frame&rdquo;. A screenshot of your order confirmation or a photo of the label on the box covers it too.</p></div>
+          </details>
+          <details class="faq-item">
+            <summary>Can I text you instead of filling in the form?</summary>
+            <div><p>Yes. Text a photo of the box or a screenshot of your order to {{PHONE}}, or message us on WhatsApp. Add your suburb and postcode and we&rsquo;ll quote from there.</p></div>
+          </details>
+          <details class="faq-item">
+            <summary>What happens after I press send?</summary>
+            <div><p>We check the items, quantities and access, then send you one clear price within 24 hours. If something needs clarifying first, we&rsquo;ll text or call. There&rsquo;s no obligation.</p></div>
+          </details>
+          <details class="faq-item">
+            <summary>Do you quote outside Adelaide, Sydney, Brisbane and Perth?</summary>
+            <div><p>Yes. Choose Melbourne or &ldquo;Other (Australia)&rdquo; and add your suburb and postcode. We have assemblers in other cities and will tell you within 24 hours whether we can get to you.</p></div>
+          </details>
+          <details class="faq-item">
+            <summary>Are wall anchoring and packaging removal included?</summary>
+            <div><p>Tall units are anchored to the wall where the manufacturer&rsquo;s instructions require it. If you&rsquo;d like other pieces secured to the wall, the packaging taken away or old furniture dismantled, tick them under add-ons and we&rsquo;ll include them in your quote.</p></div>
+          </details>
+          <details class="faq-item">
+            <summary>Do you quote for offices and businesses?</summary>
+            <div><p>Yes. Desks, workstations, shelving and storage for offices, shops and rentals go through the same form. Add the site address and any access details in the notes, along with your preferred days and times, and we&rsquo;ll confirm them with your quote.</p></div>
+          </details>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

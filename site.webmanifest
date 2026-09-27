@@ -1,0 +1,15 @@
+{
+  "name": "Wyelee \u2014 Furniture Assembly & Installation",
+  "short_name": "Wyelee",
+  "start_url": "/wyelee/",
+  "display": "browser",
+  "background_color": "#FFFFFF",
+  "theme_color": "#1D153E",
+  "icons": [
+    {
+      "src": "/wyelee/img/logo/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}
