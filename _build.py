@@ -379,9 +379,14 @@ def main():
     m404 = {'route': '', 'title': 'Page not found — Wyelee', 'description': 'That page does not exist.', 'crumb': '404'}
     body404 = '''<section class="section"><div class="wrap-narrow center"><p class="eyebrow">Error 404</p><h1>That page isn’t in the box.</h1><p class="lead mx">The link may be old or mistyped. Head back home or get a quote for your assembly.</p><div class="cta-row" style="justify-content:center"><a class="btn btn-primary" href="/">Back to home</a><a class="btn btn-ghost" href="/quote/">Get a quote</a></div></div></section>'''
     p = build_page(m404, body404)
-    # el host sirve 404.html en cualquier URL inexistente (p. ej. /quote/typo/) → rutas absolutas desde la raíz
-    p = re.sub(r'\b(href|src)="(?!https?:|/|#|mailto:|tel:|sms:)(\./)?', lambda m: '%s="%s' % (m.group(1), BASE), p)
-    p = p.replace('href="/"', 'href="%s"' % BASE).replace('href="/quote/"', 'href="%squote/"' % BASE)
+    # el host sirve 404.html en cualquier URL inexistente (p. ej. /quote/typo/) → rutas relativas a un <base>
+    # que se resuelve en tiempo de ejecución: raíz del dominio (producción, Vercel) o el prefijo del preview
+    # de GitHub Pages (/wyelee/). WYELEE_BASE fija el <base> estático de respaldo para navegadores sin JS.
+    p = re.sub(r'\b(href|src)="(?!https?:|/|#|mailto:|tel:|sms:)(\./)?', r'\1="', p)
+    p = p.replace('href="/quote/"', 'href="quote/"').replace('href="/"', 'href=""')
+    base_js = ('<base href="%s"><script>(function(){var b=location.pathname.indexOf("/wyelee/")===0?"/wyelee/":"/";'
+               'document.querySelector("base").href=b})()</script>' % BASE)
+    p = p.replace('<meta name="viewport" content="width=device-width, initial-scale=1">', '<meta name="viewport" content="width=device-width, initial-scale=1">\n' + base_js, 1)
     p = p.replace('<link rel="canonical" href="%s">\n' % SITE, '').replace('<meta name="robots" content="index, follow, max-image-preview:large">', '<meta name="robots" content="noindex">')
     write(os.path.join(ROOT, '404.html'), p)
     # sitemap
@@ -394,9 +399,9 @@ def main():
     write(os.path.join(ROOT, 'sitemap.xml'), '\n'.join(sm) + '\n')
     write(os.path.join(ROOT, 'robots.txt'), f'User-agent: *\nAllow: /\nDisallow: /_src/\n\nSitemap: {SITE}sitemap.xml\n')
     write(os.path.join(ROOT, 'site.webmanifest'), json.dumps({
-        'name': 'Wyelee — Furniture Assembly & Installation', 'short_name': 'Wyelee', 'start_url': BASE, 'display': 'browser',
+        'name': 'Wyelee — Furniture Assembly & Installation', 'short_name': 'Wyelee', 'start_url': './', 'display': 'browser',
         'background_color': '#FFFFFF', 'theme_color': '#1D153E',
-        'icons': [{'src': BASE + 'img/logo/apple-touch-icon.png', 'sizes': '180x180', 'type': 'image/png'}]}, indent=2))
+        'icons': [{'src': 'img/logo/apple-touch-icon.png', 'sizes': '180x180', 'type': 'image/png'}]}, indent=2))
     write(os.path.join(ROOT, 'llms.txt'), f'''# Wyelee — Furniture Assembly & Installation
 
 > IKEA and flatpack furniture assembly service for homes and businesses in Adelaide, Sydney, Brisbane, Perth and across Australia. Customers send their order details or a photo and receive a quote within 24 hours. Phone/SMS {PHONE_DISPLAY}. Email {EMAIL}.
