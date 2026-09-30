@@ -8,6 +8,14 @@
   },
   "rewrites": [
     {
+      "source": "/(lib|webui|_src|data|node_modules)/(.*)",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/(server\\.js|package\\.json|package-lock\\.json|vercel\\.json|_seed_demo\\.mjs|_build\\.py|_check\\.py|_hero_svg\\.py|_map_svg\\.py|_img\\.py|BACKOFFICE\\.md|BACKOFFICE-SPEC\\.md|_components\\.md|\\.gitignore)",
+      "destination": "/api/index"
+    },
+    {
       "source": "/crm",
       "destination": "/api/index"
     },
