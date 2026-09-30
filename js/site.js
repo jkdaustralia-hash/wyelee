@@ -110,7 +110,91 @@
     form._validAll = function () { for (var i = 0; i < panels.length; i++) { if (!valid(i)) { show(i); return false; } } return true; };
   });
 
+  /* ---------- attribution: utm_* / gclid / referrer / landing page, captured on the first page view ---------- */
+  var ATTR_KEY = 'wy_attr', ATTR_PARAMS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'gclid', 'fbclid'];
+  function readAttr() { try { return JSON.parse(sessionStorage.getItem(ATTR_KEY) || 'null') || {}; } catch (e) { return {}; } }
+  (function captureAttr() {
+    try {
+      var p = new URLSearchParams(window.location.search), a = readAttr(), touched = false;
+      ATTR_PARAMS.forEach(function (k) { var v = p.get(k); if (v) { a[k] = v.slice(0, 200); touched = true; } });
+      if (!a.landing) { a.landing = window.location.pathname + window.location.search; a.referrer = d.referrer || ''; a.ts = new Date().toISOString(); touched = true; }
+      if (touched) sessionStorage.setItem(ATTR_KEY, JSON.stringify(a));
+    } catch (e) { /* private mode / storage blocked: attribution is best-effort */ }
+  })();
+  function attribution() {
+    var a = readAttr(), p = new URLSearchParams(window.location.search);
+    var out = { page: window.location.pathname, referrer: a.referrer || d.referrer || '', landing: a.landing || window.location.pathname };
+    ATTR_PARAMS.forEach(function (k) { var v = p.get(k) || a[k] || ''; if (v) out[k] = v; });
+    return out;
+  }
+
   /* ---------- form submission (quote + contact) ---------- */
+  /* Field values in the markup are the human labels; the CRM stores short keys. Unknown values pass through untouched. */
+  var VALUE_KEYS = {
+    condition: { 'new in the box': 'new', 'partially assembled': 'partial', 'already assembled': 'assembled' },
+    days: { weekdays: 'weekdays', weekend: 'weekend', either: 'either' },
+    time: { morning: 'morning', afternoon: 'afternoon', either: 'either' },
+    addons: { 'packaging removal': 'packaging', 'wall anchoring': 'anchoring', 'disassembly of old furniture': 'disassembly' }
+  };
+  function normalize(name, val) {
+    var map = VALUE_KEYS[name]; if (!map) return val;
+    var k = String(val).toLowerCase().trim();
+    for (var key in map) { if (k.indexOf(key) === 0) return map[key]; }
+    return val;
+  }
+  function payload(form, source) {
+    var out = { source: source, website: '' };
+    Array.prototype.forEach.call(form.elements, function (el) {
+      if (!el.name || el.disabled || el.type === 'file' || el.type === 'submit' || el.type === 'button') return;
+      if ((el.type === 'radio' || el.type === 'checkbox') && !el.checked) return;
+      var v = normalize(el.name, (el.value || '').trim());
+      if (el.type === 'checkbox') { (out[el.name] = out[el.name] || []).push(v); return; }
+      out[el.name] = v;
+    });
+    return out;
+  }
+  /* photos: downscaled in the browser (longest side 1600 px, JPEG 0.8), max 6; originals over 4 MB are left out with a notice */
+  var PHOTO_MAX_ORIGINAL = 4 * 1024 * 1024, PHOTO_MAX = 6, PHOTO_SIDE = 1600, PHOTO_B64_MAX = 700000;
+  function loadImage(file) {
+    return new Promise(function (resolve, reject) {
+      var url = URL.createObjectURL(file), img = new Image();
+      img.onload = function () { URL.revokeObjectURL(url); resolve(img); };
+      img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('decode')); };
+      img.src = url;
+    });
+  }
+  function shrink(file) {
+    return loadImage(file).then(function (img) {
+      var w = img.naturalWidth || img.width, h = img.naturalHeight || img.height, side = PHOTO_SIDE, q = 0.8, data = '';
+      if (!w || !h) throw new Error('empty');
+      for (var attempt = 0; attempt < 4; attempt++) {
+        var scale = Math.min(1, side / Math.max(w, h));
+        var c = d.createElement('canvas'); c.width = Math.max(1, Math.round(w * scale)); c.height = Math.max(1, Math.round(h * scale));
+        var ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height); ctx.drawImage(img, 0, 0, c.width, c.height);
+        data = (c.toDataURL('image/jpeg', q).split(',')[1]) || '';
+        if (data.length <= PHOTO_B64_MAX) break;
+        q = Math.max(0.5, q - 0.15); side = Math.round(side * 0.8); // busy photo: try smaller until it fits the API limit
+      }
+      if (!data || data.length > PHOTO_B64_MAX) throw new Error('too big');
+      return { name: file.name.replace(/\.[^.]+$/, '') + '.jpg', type: 'image/jpeg', data: data };
+    });
+  }
+  function preparePhotos(form) {
+    var input = form.querySelector('input[type="file"]');
+    var files = input && input.files ? Array.prototype.slice.call(input.files) : [], photos = [], skipped = [];
+    if (!files.length) return Promise.resolve({ photos: photos, skipped: skipped });
+    files.forEach(function (f) { if (f.size > PHOTO_MAX_ORIGINAL) skipped.push(f.name); });
+    files = files.filter(function (f) { return f.size <= PHOTO_MAX_ORIGINAL; });
+    if (files.length > PHOTO_MAX) { files.slice(PHOTO_MAX).forEach(function (f) { skipped.push(f.name); }); files = files.slice(0, PHOTO_MAX); }
+    return files.reduce(function (p, f) {
+      return p.then(function () { return shrink(f).then(function (ph) { photos.push(ph); }, function () { skipped.push(f.name); }); });
+    }, Promise.resolve()).then(function () { return { photos: photos, skipped: skipped }; });
+  }
+  function skippedNote(skipped) {
+    if (!skipped.length) return '';
+    var n = skipped.length;
+    return 'We received your request but ' + (n === 1 ? '1 photo was' : n + ' photos were') + ' left out (over 4 MB or not readable): ' + skipped.join(', ') + '. Text them to 0432 470 313 and we will add them to your quote.';
+  }
   function summary(form) {
     var lines = [], seen = {};
     Array.prototype.forEach.call(form.elements, function (el) {
@@ -161,21 +245,39 @@
           success.focus && success.setAttribute('tabindex', '-1'); success.focus();
         } else if (status) { status.className = 'form-status ok'; status.textContent = msg || 'Thanks — we have your message.'; }
       }
-      function fail() {
-        if (status) { status.className = 'form-status err'; status.textContent = 'Sorry, something went wrong sending the form. Please text or WhatsApp us on 0432 470 313.'; }
-        if (btn) { btn.disabled = false; btn.textContent = btn.getAttribute('data-txt'); }
+      function reset() { if (btn) { btn.disabled = false; btn.textContent = btn.getAttribute('data-txt'); } }
+      // WhatsApp fallback: no endpoint (static preview) or the CRM could not be reached → open a chat with the prefilled summary.
+      function waFallback(note) {
+        var text = (kind === 'quote' ? 'Hi Wyelee, I would like a quote:\n' : 'Hi Wyelee,\n') + lines.join('\n') + (hasFiles ? '\n(Photos: I will send them here in the chat.)' : '');
+        var w = window.open(WA + '?text=' + encodeURIComponent(text), '_blank', 'noopener');
+        var extra = hasFiles ? 'Photos can’t travel with the WhatsApp link — just send them in the chat we opened for you.' : '';
+        done([note, extra].filter(Boolean).join(' '), true);
+        if (!w && status) { status.className = 'form-status ok'; status.textContent = 'If WhatsApp did not open, use the button below.'; }
+        reset();
       }
       if (btn) { btn.setAttribute('data-txt', btn.textContent); btn.disabled = true; btn.textContent = 'Sending…'; }
       if (endpoint) {
-        fetch(endpoint, { method: 'POST', body: new FormData(form), headers: { 'Accept': 'application/json' } })
-          .then(function (r) { if (!r.ok) throw new Error(r.status); done('', false); })
-          .catch(fail);
+        // JSON to the CRM: fields by name (checkbox → array), source, attribution and browser-reduced photos.
+        var body = payload(form, kind), saved = false;
+        body.attribution = attribution();
+        preparePhotos(form).then(function (res) {
+          body.photos = res.photos;
+          return fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify(body) })
+            .then(function (r) {
+              if (!r.ok) throw new Error('HTTP ' + r.status);
+              saved = true;
+              return r.json().catch(function () { return {}; });
+            })
+            .then(function (j) {
+              done(skippedNote(res.skipped), false); // success block, WhatsApp button hidden
+              try { window.dispatchEvent(new CustomEvent('wyelee:lead', { detail: { source: kind, id: j && j.id } })); } catch (err) { /* analytics is optional */ }
+            });
+        }).catch(function () {
+          if (saved) return; // stored fine; only the post-success UI failed
+          waFallback('We couldn’t reach our server just now, so we opened WhatsApp with your details instead.');
+        });
       } else {
-        // No endpoint configured yet: open WhatsApp with a prefilled summary.
-        var text = (kind === 'quote' ? 'Hi Wyelee, I would like a quote:\n' : 'Hi Wyelee,\n') + lines.join('\n') + (hasFiles ? '\n(Photos: I will send them here in the chat.)' : '');
-        var w = window.open(WA + '?text=' + encodeURIComponent(text), '_blank', 'noopener');
-        done(hasFiles ? 'Photos can’t travel with the WhatsApp link — just send them in the chat we opened for you.' : '', true);
-        if (!w && status) { status.className = 'form-status ok'; status.textContent = 'If WhatsApp did not open, use the button below.'; }
+        waFallback('');
       }
     });
   });

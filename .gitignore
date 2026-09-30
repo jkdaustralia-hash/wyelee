@@ -6,7 +6,12 @@ _*
 !_hero_svg.py
 !_map_svg.py
 !_img.py
+!_seed_demo.mjs
 _screens/
 __pycache__/
 *.pyc
 .vercel/
+node_modules/
+data/
+*.log
+.env

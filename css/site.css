@@ -428,6 +428,8 @@ fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
 .form-success { display: none; text-align: center; padding: 20px 0; }
 .form-success .ic { width: 64px; height: 64px; color: var(--green); margin: 0 auto 16px; stroke-width: 1.4; }
 .form-success[data-show] { display: block; }
+/* the WhatsApp button is only a fallback: js/site.js hides it once the CRM stored the lead — .btn's inline-flex must not defeat [hidden] */
+.form-success [data-wa-link][hidden] { display: none; }
 
 /* ---------- contact cards ---------- */
 .contact-cards { display: grid; gap: 16px; }

@@ -10,7 +10,8 @@ sys.stdout.reconfigure(encoding='utf-8')
 ROOT = os.path.dirname(os.path.abspath(__file__))
 os.chdir(ROOT)
 VOID = {'br', 'img', 'input', 'meta', 'link', 'hr', 'source', 'use', 'path', 'circle', 'rect', 'polygon', 'line', 'polyline', 'wbr'}
-pages = ['index.html'] + sorted(g for g in glob.glob('*/index.html') if not g.startswith('_'))
+PRIVATE = ('_', 'webui', 'lib', 'api', 'data', 'node_modules')   # back office / server folders: not site pages
+pages = ['index.html'] + sorted(g for g in glob.glob('*/index.html') if not g.startswith(PRIVATE))
 
 
 class P(HTMLParser):

@@ -1,0 +1,18 @@
+{
+  "name": "wyelee",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Wyelee — sitio estático + back office (mini-CRM de cotizaciones, integraciones, magic link)",
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning server.js",
+    "dev": "node --disable-warning=ExperimentalWarning --watch server.js",
+    "build:site": "python _build.py"
+  },
+  "dependencies": {
+    "@libsql/client": "^0.17.4"
+  },
+  "engines": {
+    "node": "22.x"
+  }
+}

@@ -277,6 +277,7 @@ def footer(route, m=None):
 </footer>
 <a class="wa-float" href="{wa_href()}" target="_blank" rel="noopener" aria-label="Chat with Wyelee on WhatsApp">{ic('wa')}<span>WhatsApp</span></a>
 {sticky(route)}
+<script src="{R}js/analytics.js" defer></script>
 <script src="{R}js/site.js" defer></script>
 {''.join('<script src="%s%s" defer></script>' % (R, j) for j in m.get('js', []))}
 </body>
