@@ -1,8 +1,10 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "node _dist.mjs",
+  "outputDirectory": "dist",
   "functions": {
     "api/index.js": {
-      "includeFiles": "webui/**",
+      "includeFiles": "{webui/**,404.html}",
       "maxDuration": 15
     }
   },
