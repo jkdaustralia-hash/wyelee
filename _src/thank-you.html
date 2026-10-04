@@ -1,0 +1,139 @@
+<!--meta {
+  "route": "thank-you/",
+  "title": "Thanks — your request is in | Wyelee",
+  "description": "We have your request. Wyelee checks it and replies by text, WhatsApp or email with your furniture assembly quote within 24 hours.",
+  "og": "og-home.jpg",
+  "crumb": "Thank you",
+  "noindex": true,
+  "body_class": "thanks-page",
+  "js": ["js/thanks.js"]
+} -->
+{{CRUMBS}}
+<!-- ═══════════════ CONFIRMATION — the last sheet of the manual ═══════════════
+     Variants are toggled by js/thanks.js from the URL (?s=quote|contact&via=wa&photos=skipped):
+       data-only="quote"   quote-form copy (default without JS)
+       data-only="contact" contact-form copy
+       data-only="crm"     the request reached us (default)
+       data-only="wa"      the request continues in WhatsApp (static preview / server unreachable) — nothing is received
+                           until the visitor presses send, so this state must not say "received" (see data-not)
+       data-only="skipped" one or more photos were too large or could not be read (e.g. HEIC the browser cannot decode) and were not sent
+     data-only lists keys joined by OR; data-not="wa" (etc.) hides the element when that key matches, so
+     "quote and not wa" is expressible. Keep the non-default variants `hidden` so the no-JS page reads quote+crm.
+-->
+<section class="page-hero" data-thanks-page data-s="quote">
+  <div class="wrap split">
+    <div>
+      <p class="eyebrow" data-only="quote" data-not="wa">Request received</p>
+      <p class="eyebrow" data-only="contact" data-not="wa" hidden>Message received</p>
+      <p class="eyebrow" data-only="wa" hidden>One more tap</p>
+      <h1><span data-only="quote" data-not="wa">Your request is in the box.</span><span data-only="contact" data-not="wa" hidden>Thanks &mdash; your message is in.</span><span data-only="wa" data-not="contact" hidden>Your request is ready to send.</span><span data-only="wa" data-not="quote" hidden>Your message is ready to send.</span></h1>
+      <p class="lead" data-only="quote" data-not="wa">We check every request and send your quote within 24 hours &mdash; by text, WhatsApp or email.</p>
+      <p class="lead" data-only="contact" data-not="wa" hidden>We read every message and reply by text, WhatsApp or email. In a hurry? Call or text <a href="{{TEL}}">{{PHONE}}</a>.</p>
+      <p class="lead" data-only="wa" data-not="contact" hidden>WhatsApp has your details typed in. Press send and it is with us &mdash; we check it and send your quote within 24 hours.</p>
+      <p class="lead" data-only="wa" data-not="quote" hidden>WhatsApp has your message typed in. Press send and it is with us &mdash; we reply by text, WhatsApp or email.</p>
+
+      <div class="note navy" data-only="wa" hidden style="margin-top:20px">
+        <svg class="ic" aria-hidden="true"><use href="#i-wa"/></svg>
+        <p><strong>Not sent yet:</strong> your details are typed into a WhatsApp chat &mdash; press send there. If the chat didn&rsquo;t open, tap Open WhatsApp below. Photos don&rsquo;t travel with the link, so drop them into the chat.</p>
+      </div>
+      <div class="cta-row" data-only="wa" hidden style="margin-top:14px">
+        <a class="btn btn-primary" data-wa-open data-wa-base="https://wa.me/61432470313" href="{{WA}}" target="_blank" rel="noopener"><svg class="ic" aria-hidden="true"><use href="#i-wa"/></svg> Open WhatsApp</a>
+      </div>
+
+      <div class="note" data-only="skipped" hidden style="margin-top:20px">
+        <svg class="ic" aria-hidden="true"><use href="#i-camera"/></svg>
+        <p>One or more photos were too large or could not be read, so they did not come through with the form. Text them to <a href="sms:+61432470313">{{PHONE}}</a> or send them on <a href="{{WA}}" target="_blank" rel="noopener">WhatsApp</a> and we&rsquo;ll add them to your request.</p>
+      </div>
+
+    </div>
+
+    <!-- sign-off sheet: the ticks draw in on load (.signoff.in). The check-circle is inlined (not <use>) so css/site.css
+         can reach the tick path: the draw-in, and the empty circle on row 1 while the WhatsApp message is still unsent (.todo). -->
+    <div class="form-card signoff rv">
+      <p class="eyebrow">Sign-off</p>
+      <h2 style="margin-top:0">What happens now</h2>
+      <ul class="checklist" style="margin-top:18px">
+        <li style="--k:0">
+          <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="m8 12.5 2.8 2.8L16.5 9"/></svg>
+          <div><strong data-only="crm">Received</strong><strong data-only="wa" hidden>Press send in WhatsApp</strong><p data-only="crm">Your details are with us and in the queue.</p><p data-only="wa" hidden>As soon as you press send in WhatsApp, your details are with us.</p></div>
+        </li>
+        <li style="--k:1">
+          <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="m8 12.5 2.8 2.8L16.5 9"/></svg>
+          <div><strong data-only="quote">Checked</strong><strong data-only="contact" hidden>Read</strong><p data-only="quote">We check the items, quantities and access and text you if anything is unclear.</p><p data-only="contact" hidden>We read it and work out who is best placed to answer.</p></div>
+        </li>
+        <li style="--k:2">
+          <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="m8 12.5 2.8 2.8L16.5 9"/></svg>
+          <div><strong data-only="quote">Quote within 24 hours</strong><strong data-only="contact" hidden>Reply by text, WhatsApp or email</strong><p data-only="quote">One clear price by text, WhatsApp or email. No obligation.</p><p data-only="contact" hidden>If your question needs a price, we&rsquo;ll send a quote within 24 hours.</p></div>
+        </li>
+      </ul>
+    </div>
+  </div>
+  <div class="wrap">
+    <div class="cta-row" style="margin-top:28px">
+      <a class="btn btn-ghost" href="{{R}}">Back to home <svg class="ic" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ FORGOT SOMETHING + CONTENTS ═══════════════ -->
+<section class="section bg-fog">
+  <div class="wrap split" style="align-items:start">
+    <div class="rv">
+      <p class="eyebrow">Forgot something?</p>
+      <h2>Add to your request any time</h2>
+      <p class="lead">Extra items, a photo of the box, a change of day &mdash; just text, call or WhatsApp us and mention your name. We&rsquo;ll add it to the same request.</p>
+      <ul class="rail rail-notes" style="margin-top:20px">
+        <li>
+          <svg class="ic" aria-hidden="true"><use href="#i-sms"/></svg>
+          <a href="sms:+61432470313">Text {{PHONE}}</a>
+          <p>Photos and article numbers travel well by text.</p>
+        </li>
+        <li>
+          <svg class="ic" aria-hidden="true"><use href="#i-wa"/></svg>
+          <a href="{{WA}}" target="_blank" rel="noopener">WhatsApp us</a>
+          <p>Same number &mdash; the chat opens with the first line already typed.</p>
+        </li>
+        <li>
+          <svg class="ic" aria-hidden="true"><use href="#i-mail"/></svg>
+          <a href="mailto:{{EMAIL}}">{{EMAIL}}</a>
+          <p>Best for order screenshots and longer lists.</p>
+        </li>
+      </ul>
+    </div>
+
+    <div class="rv rv-d1">
+      <p class="eyebrow">Contents</p>
+      <h2>Meanwhile, what else we assemble</h2>
+      <ul class="parts ledger" style="margin-top:20px">
+        <li><a href="{{R}}furniture-assembly/">
+          <span class="num">01</span>
+          <span class="pict-wrap pict"><svg class="pict" aria-hidden="true"><use href="#p-bed"/></svg></span>
+          <span class="part-name"><small>Service 01</small>Furniture Assembly</span>
+          <p class="part-desc">Any flatpack, any brand &mdash; beds, desks, drawers, bookshelves, TV units, sofas.</p>
+          <span class="part-go"><svg class="ic" aria-hidden="true"><use href="#i-arrow"/></svg></span>
+        </a></li>
+        <li><a href="{{R}}wardrobe-assembly/">
+          <span class="num">02</span>
+          <span class="pict-wrap pict"><svg class="pict" aria-hidden="true"><use href="#p-wardrobe"/></svg></span>
+          <span class="part-name"><small>Service 02</small>Wardrobe Assembly</span>
+          <p class="part-desc">IKEA PAX and other sliding-door, walk-in and fitted wardrobes, anchored to the wall.</p>
+          <span class="part-go"><svg class="ic" aria-hidden="true"><use href="#i-arrow"/></svg></span>
+        </a></li>
+        <li><a href="{{R}}disassembly-service/">
+          <span class="num">03</span>
+          <span class="pict-wrap pict"><svg class="pict" aria-hidden="true"><use href="#p-moving"/></svg></span>
+          <span class="part-name"><small>Service 03</small>Disassembly Service</span>
+          <p class="part-desc">Careful dismantling for moves, fittings bagged and labelled per item.</p>
+          <span class="part-go"><svg class="ic" aria-hidden="true"><use href="#i-arrow"/></svg></span>
+        </a></li>
+        <li><a href="{{R}}ikea-kitchen-assembly/">
+          <span class="num">04</span>
+          <span class="pict-wrap pict"><svg class="pict" aria-hidden="true"><use href="#p-kitchen"/></svg></span>
+          <span class="part-name"><small>Service 04</small>IKEA Kitchen Assembly</span>
+          <p class="part-desc">METOD cabinets, doors, drawers and plinths. No plumbing or benchtops.</p>
+          <span class="part-go"><svg class="ic" aria-hidden="true"><use href="#i-arrow"/></svg></span>
+        </a></li>
+      </ul>
+    </div>
+  </div>
+</section>

@@ -1285,9 +1285,9 @@ function openEditRedirect(r) {
 const PROVIDERS = [
   ['ga4_id', 'Google Analytics 4', 'G-XXXXXXXXXX', 'ID de medición (Administrar → Flujos de datos → Web). Envía page_view y el evento generate_lead.', 'GA', '#E37400'],
   ['gtm_id', 'Google Tag Manager', 'GTM-XXXXXXX', 'ID del contenedor. Si gestionas todo desde GTM, deja vacíos los demás para no duplicar etiquetas.', 'TM', '#4285F4'],
-  ['google_ads', 'Google Ads', 'AW-XXXXXXXXX', 'ID de conversión y etiqueta (label) de la acción "Lead". Se dispara al enviar el formulario de cotización.', 'AD', '#34A853'],
+  ['google_ads', 'Google Ads', 'AW-XXXXXXXXX', 'ID de conversión y etiqueta (label) de la acción "Lead". Se dispara al cargar la página de gracias (/thank-you/) tras un envío real.', 'AD', '#34A853'],
   ['meta_pixel_id', 'Meta Pixel', '1234567890123456', 'ID numérico del píxel (Events Manager). Envía PageView y Lead.', 'f', '#1877F2'],
-  ['tiktok_pixel_id', 'TikTok Pixel', 'CXXXXXXXXXXXXXXXXX', 'ID del píxel (TikTok Ads → Events Manager). Envía SubmitForm al cotizar.', 'TT', '#111111'],
+  ['tiktok_pixel_id', 'TikTok Pixel', 'CXXXXXXXXXXXXXXXXX', 'ID del píxel (TikTok Ads → Events Manager). Envía SubmitForm en la página de gracias.', 'TT', '#111111'],
   ['clarity_id', 'Microsoft Clarity', 'abcdefghij', 'ID del proyecto: grabaciones de sesión y mapas de calor, gratis.', 'C', '#0078D4'],
   ['hotjar_id', 'Hotjar', '1234567', 'Site ID numérico (hjid).', 'H', '#FD3A5C'],
 ];
@@ -1393,14 +1393,16 @@ async function viewIntegrations() {
           </div>
         </div>
         <div class="card-box">
-          <div class="section-t">Eventos al cotizar</div>
+          <div class="section-t">Eventos de conversión</div>
+          <p class="help" style="margin:0 0 10px">Todo formulario enviado termina en la <strong>página de gracias</strong> <code>/thank-you/</code>. Allí, una sola vez por envío, se disparan:</p>
           <ul class="ev-list">
+            <li><code>dataLayer wyelee_lead</code> GTM (variable <code>lead_source</code>)</li>
             <li><code>gtag generate_lead</code> GA4</li>
             <li><code>gtag conversion</code> Google Ads (ID/etiqueta)</li>
             <li><code>fbq Lead</code> Meta Pixel</li>
             <li><code>ttq SubmitForm</code> TikTok Pixel</li>
           </ul>
-          <p class="help" style="margin-top:12px">Clarity y Hotjar solo graban sesiones; no necesitan eventos.</p>
+          <p class="help" style="margin-top:12px">En GTM crea la conversión con el activador «Evento personalizado» <code>wyelee_lead</code> (variable de capa de datos <code>lead_source</code> = quote | contact; <code>quote_wa</code> | <code>contact_wa</code> cuando el envío cayó a WhatsApp con <code>&amp;via=wa</code>: el visitante aún debe pulsar enviar, así que conviene segmentarlos o excluirlos): se envía en <code>/thank-you/</code> una sola vez por envío, igual que los eventos de arriba. El activador «Página vista» sobre <code>/thank-you/</code> también funciona, pero cuenta recargas y visitas directas; si lo usas, añade la condición Page URL contiene <code>k=</code>. Clarity y Hotjar solo graban sesiones; no necesitan eventos.</p>
         </div>
       </aside>
     </div>`;

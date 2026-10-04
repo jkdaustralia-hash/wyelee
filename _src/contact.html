@@ -45,7 +45,7 @@
 <!-- ═══════════════ MESSAGE FORM + WHERE WE WORK ═══════════════ -->
 <section class="section" id="message">
   <div class="wrap split" style="align-items:start">
-    <form class="form form-card rv" data-lead="contact" data-endpoint="/api/public/lead" method="post" novalidate aria-labelledby="msg-h">
+    <form class="form form-card rv" data-lead="contact" data-endpoint="/api/public/lead" data-thanks="{{R}}thank-you/" method="post" novalidate aria-labelledby="msg-h">
       <div class="form-body">
        <div style="display:grid;gap:18px">
         <div>
@@ -75,7 +75,7 @@
           <input type="text" id="c-website" name="website" tabindex="-1" autocomplete="off">
         </div>
         <div class="form-foot">
-          <button class="btn btn-primary btn-lg" type="submit">Send message <svg class="ic" aria-hidden="true"><use href="#i-arrow"/></svg></button>
+          <button class="btn btn-primary btn-lg" type="submit" autocomplete="off">Send message <svg class="ic" aria-hidden="true"><use href="#i-arrow"/></svg></button>
           <noscript><p class="fine">This form needs JavaScript. Text or WhatsApp us on <a href="{{TEL}}">{{PHONE}}</a> (<a href="{{WA}}" target="_blank" rel="noopener">WhatsApp</a>) and we will take it from there.</p></noscript>
           <p class="fine">If this opens WhatsApp, your message is already typed &mdash; just press send.</p>
         </div>

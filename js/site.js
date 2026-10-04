@@ -153,8 +153,11 @@
     });
     return out;
   }
-  /* photos: downscaled in the browser (longest side 1600 px, JPEG 0.8), max 6; originals over 4 MB are left out with a notice */
-  var PHOTO_MAX_ORIGINAL = 4 * 1024 * 1024, PHOTO_MAX = 6, PHOTO_SIDE = 1600, PHOTO_B64_MAX = 700000;
+  /* photos: downscaled in the browser (longest side 1600 px, JPEG 0.8), max 6; originals over 10 MB are left out with a notice.
+     The original size never reaches the API (shrink() caps every photo at PHOTO_B64_MAX), so the limit only mirrors the form hint
+     "Up to 10 MB each". Single source of truth: js/quote.js reads window.WY_PHOTO_MAX for its own size check. */
+  var PHOTO_MAX_ORIGINAL = 10 * 1024 * 1024, PHOTO_MAX = 6, PHOTO_SIDE = 1600, PHOTO_B64_MAX = 700000;
+  window.WY_PHOTO_MAX = PHOTO_MAX_ORIGINAL;
   function loadImage(file) {
     return new Promise(function (resolve, reject) {
       var url = URL.createObjectURL(file), img = new Image();
@@ -193,7 +196,7 @@
   function skippedNote(skipped) {
     if (!skipped.length) return '';
     var n = skipped.length;
-    return 'We received your request but ' + (n === 1 ? '1 photo was' : n + ' photos were') + ' left out (over 4 MB or not readable): ' + skipped.join(', ') + '. Text them to 0432 470 313 and we will add them to your quote.';
+    return 'We received your request but ' + (n === 1 ? '1 photo was' : n + ' photos were') + ' left out (over 10 MB or not readable): ' + skipped.join(', ') + '. Text them to 0432 470 313 and we will add them to your quote.';
   }
   function summary(form) {
     var lines = [], seen = {};
@@ -229,13 +232,31 @@
     }
     form.addEventListener('input', clearIfValid);
     form.addEventListener('change', clearIfValid);
+    // bfcache safety net: a page frozen mid-send (Back from the WhatsApp tab, a link tapped while photos compress) is restored
+    // with the button still disabled and reading "Sending…"; give it back so the visitor can submit without a reload.
+    window.addEventListener('pageshow', function (e) {
+      if (!e.persisted) return;
+      var b = form.querySelector('[type="submit"]');
+      if (b && b.getAttribute('data-txt')) { b.disabled = false; b.textContent = b.getAttribute('data-txt'); }
+    });
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       if (form.website && form.website.value) return; // honeypot
       if (form._validAll ? !form._validAll() : !form.checkValidity()) { form.reportValidity && form.reportValidity(); return; }
-      var btn = form.querySelector('[type="submit"]'), endpoint = form.getAttribute('data-endpoint');
+      var btn = form.querySelector('[type="submit"]'), endpoint = form.getAttribute('data-endpoint'), thanks = form.getAttribute('data-thanks');
       var lines = summary(form);
       var hasFiles = form.querySelector('input[type="file"]') && form.querySelector('input[type="file"]').files.length > 0;
+      // Thank-you page (conversion URL for GA4 / Google Ads / GTM): ?s=quote|contact&k=<nonce> — js/analytics.js fires
+      // the lead events there once per nonce. Returns false when the page has no data-thanks (inline success instead).
+      // replace(), not assign(): the spent form drops out of history, so Back from /thank-you/ lands on the page before the
+      // form instead of restoring a filled form with a dead "Sending…" button, and a resubmit can never post the lead twice.
+      // The button stays disabled until the navigation commits on purpose (a second tap during that window must not re-POST).
+      function goThanks(extra) {
+        if (!thanks) return false;
+        var k = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+        window.location.replace(thanks + '?s=' + encodeURIComponent(kind) + '&k=' + k + (extra || ''));
+        return true;
+      }
       function done(msg, showWa) {
         if (success) {
           success.setAttribute('data-show', '');
@@ -249,7 +270,9 @@
       // WhatsApp fallback: no endpoint (static preview) or the CRM could not be reached → open a chat with the prefilled summary.
       function waFallback(note) {
         var text = (kind === 'quote' ? 'Hi Wyelee, I would like a quote:\n' : 'Hi Wyelee,\n') + lines.join('\n') + (hasFiles ? '\n(Photos: I will send them here in the chat.)' : '');
+        try { sessionStorage.setItem('wy_wa_text', text); } catch (err) { /* the thank-you page falls back to the generic link */ }
         var w = window.open(WA + '?text=' + encodeURIComponent(text), '_blank', 'noopener');
+        if (goThanks('&via=wa')) return; // the thank-you page shows "press send in WhatsApp" + an Open WhatsApp button
         var extra = hasFiles ? 'Photos can’t travel with the WhatsApp link — just send them in the chat we opened for you.' : '';
         done([note, extra].filter(Boolean).join(' '), true);
         if (!w && status) { status.className = 'form-status ok'; status.textContent = 'If WhatsApp did not open, use the button below.'; }
@@ -268,9 +291,9 @@
               saved = true;
               return r.json().catch(function () { return {}; });
             })
-            .then(function (j) {
-              done(skippedNote(res.skipped), false); // success block, WhatsApp button hidden
-              try { window.dispatchEvent(new CustomEvent('wyelee:lead', { detail: { source: kind, id: j && j.id } })); } catch (err) { /* analytics is optional */ }
+            .then(function () {
+              if (goThanks(res.skipped.length ? '&photos=skipped' : '')) return; // conversion page
+              done(skippedNote(res.skipped), false); // no thank-you page: inline success block, WhatsApp button hidden
             });
         }).catch(function () {
           if (saved) return; // stored fine; only the post-success UI failed

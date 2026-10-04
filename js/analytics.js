@@ -14,18 +14,27 @@
     if (!host || host === 'localhost' || host === '127.0.0.1' || host === '[::1]' ||
         /\.github\.io$/i.test(host) || /\.local$/i.test(host) || /\.test$/i.test(host)) return;
 
-    var cfg = null, ready = false, pendingLeads = [];
+    var cfg = null;
 
-    /* Site forms dispatch this on a successful send (js/site.js). Listen from the very
-       start so a lead that arrives before the config has loaded is not lost. */
-    window.addEventListener('wyelee:lead', function (e) {
-      try {
-        var source = (e && e.detail && e.detail.source) || 'quote';
-        if (ready) trackLead(source); else pendingLeads.push(source);
-      } catch (err) { /* never throw */ }
-    });
+    /* Conversion page: js/site.js redirects every successful form send to /thank-you/?s=quote|contact&k=<nonce>.
+       The lead events fire here, once per nonce (sessionStorage guard against reloads), so GA4 / Google Ads /
+       GTM measure the conversion by this URL. A visit without `k` (typed URL, bookmark) never counts.
+       GTM: the conversion trigger must be the Custom Event `wyelee_lead` (Data Layer variable `lead_source` =
+       quote | contact), pushed once per nonce by trackLead(). A Page View trigger on /thank-you/ cannot see the
+       sessionStorage guard, so it would also count reloads and direct visits.
+       lead_source becomes quote_wa | contact_wa when the send fell back to WhatsApp (&via=wa): nothing reached
+       the CRM and the visitor still has to press send in the chat, so GA4 / Ads / GTM can segment or exclude it. */
+    var convKey = null, convSource = 'quote';
+    try {
+      if (/\/thank-you\/?$/i.test(location.pathname)) {
+        var qp = new URLSearchParams(location.search);
+        convKey = qp.get('k') || null;
+        convSource = (qp.get('s') === 'contact' ? 'contact' : 'quote') + (qp.get('via') === 'wa' ? '_wa' : '');
+      }
+    } catch (err) { convKey = null; }
 
-    /* ---------- deferred boot: 1st interaction or 4 s after load (keeps LCP/TBT clean) ---------- */
+    /* ---------- deferred boot: 1st interaction or 4 s after load (keeps LCP/TBT clean);
+                 immediate on the thank-you page so the conversion is not lost if the visitor leaves ---------- */
     var started = false;
     function go() {
       if (started) return; started = true;
@@ -34,18 +43,20 @@
           .then(function (r) { return r.ok ? r.json() : null; })
           .then(function (c) {
             cfg = c || {};
-            if (cfg.enabled) { safe(init); }
-            ready = true; // even when disabled: flush (drops) queued leads so nothing lingers
-            var q = pendingLeads.splice(0); q.forEach(function (s) { safe(function () { trackLead(s); }); });
+            if (cfg.enabled) { safe(init); if (convKey) safe(trackLeadOnce); }
           })
-          .catch(function () { ready = true; pendingLeads.length = 0; });
+          .catch(function () { /* no config → nothing to load */ });
       } catch (err) { /* never throw */ }
     }
-    ['pointerdown', 'keydown', 'touchstart', 'scroll'].forEach(function (ev) {
-      addEventListener(ev, go, { once: true, passive: true });
-    });
-    function later() { setTimeout(go, 4000); }
-    if (document.readyState === 'complete') later(); else addEventListener('load', later);
+    if (convKey) {
+      go();
+    } else {
+      ['pointerdown', 'keydown', 'touchstart', 'scroll'].forEach(function (ev) {
+        addEventListener(ev, go, { once: true, passive: true });
+      });
+      var later = function () { setTimeout(go, 4000); };
+      if (document.readyState === 'complete') later(); else addEventListener('load', later);
+    }
 
     function safe(fn) { try { fn(); } catch (err) { if (window.console && console.warn) console.warn('[wyelee analytics]', err); } }
 
@@ -164,7 +175,20 @@
       });
     }
 
-    /* ---------- lead conversion (fired by js/site.js after a successful send) ---------- */
+    /* ---------- lead conversion (fired on /thank-you/?k=<nonce>, once per nonce) ---------- */
+    function trackLeadOnce() {
+      var flag = 'wy_conv_' + convKey;
+      try { if (sessionStorage.getItem(flag)) return; sessionStorage.setItem(flag, '1'); } catch (err) { /* no storage: fire anyway */ }
+      trackLead(convSource);
+      /* drop the nonce from the address bar a moment later: a copied / re-opened URL can no longer count again
+         (sessionStorage is per tab). The copy variants were already read by js/thanks.js at load. */
+      setTimeout(function () {
+        try {
+          var u = new URL(location.href); u.searchParams.delete('k');
+          history.replaceState(history.state, '', u.pathname + u.search + u.hash);
+        } catch (err) { /* ignore */ }
+      }, 3000);
+    }
     function trackLead(source) {
       if (!cfg || !cfg.enabled) return;
       var payload = { value: 1, currency: 'AUD', lead_source: source };

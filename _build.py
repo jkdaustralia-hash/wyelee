@@ -143,7 +143,7 @@ def head(m, route):
 <title>{esc(title)}</title>
 <meta name="description" content="{esc(desc)}">
 <link rel="canonical" href="{url}">
-<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="robots" content="{'noindex, follow' if m.get('noindex') else 'index, follow, max-image-preview:large'}">
 <meta name="theme-color" content="#1D153E">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="{BRAND}">
@@ -230,7 +230,7 @@ def header(route):
 
 
 def sticky(route):
-    if route in ('quote/', 'contact/'):
+    if route in ('quote/', 'contact/', 'thank-you/'):
         return ''
     R = rel(route)
     return (f'<div class="sticky-bar" data-sticky><strong>Quote within 24 hours</strong>'
@@ -367,6 +367,7 @@ def write(path, s):
 
 def main():
     routes = []
+    noindex = set()
     for fn in sorted(os.listdir(SRC)):
         if not fn.endswith('.html') or fn.startswith('_'):
             continue
@@ -375,7 +376,9 @@ def main():
         out = os.path.join(ROOT, route.replace('/', os.sep), 'index.html')
         write(out, build_page(meta, body))
         routes.append(route)
-        print('  ', route or '/', '->', os.path.relpath(out, ROOT))
+        if meta.get('noindex'):
+            noindex.add(route)       # p. ej. thank-you/: se construye pero no entra al sitemap
+        print('  ', route or '/', '->', os.path.relpath(out, ROOT), '(noindex)' if meta.get('noindex') else '')
     # 404
     m404 = {'route': '', 'title': 'Page not found — Wyelee', 'description': 'That page does not exist.', 'crumb': '404'}
     body404 = '''<section class="section"><div class="wrap-narrow center"><p class="eyebrow">Error 404</p><h1>That page isn’t in the box.</h1><p class="lead mx">The link may be old or mistyped. Head back home or get a quote for your assembly.</p><div class="cta-row" style="justify-content:center"><a class="btn btn-primary" href="/">Back to home</a><a class="btn btn-ghost" href="/quote/">Get a quote</a></div></div></section>'''
@@ -392,6 +395,7 @@ def main():
     write(os.path.join(ROOT, '404.html'), p)
     # sitemap
     ordered = [r for r in PAGES_ORDER if r in routes] + [r for r in routes if r not in PAGES_ORDER]
+    ordered = [r for r in ordered if r not in noindex]
     sm = ['<?xml version="1.0" encoding="UTF-8"?>', '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
     for r in ordered:
         pr = '1.0' if r == '' else ('0.9' if r in ('furniture-assembly/', 'quote/') else '0.8')

@@ -5,7 +5,8 @@
   'use strict';
   var d = document, form = d.querySelector('form[data-lead="quote"]');
   if (!form) return;
-  var f = form.elements, MAX = 10 * 1024 * 1024;
+  // Photo size limit: one source of truth in js/site.js (PHOTO_MAX_ORIGINAL → window.WY_PHOTO_MAX); the literal is only a fallback.
+  var f = form.elements, MAX = window.WY_PHOTO_MAX || 10 * 1024 * 1024;
 
   /* ---------- prefill: ?svc= (service pages) and ?other= (picker "something else") ---------- */
   var p = new URLSearchParams(window.location.search);

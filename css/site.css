@@ -430,6 +430,9 @@ fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
 .form-success[data-show] { display: block; }
 /* the WhatsApp button is only a fallback: js/site.js hides it once the CRM stored the lead — .btn's inline-flex must not defeat [hidden] */
 .form-success [data-wa-link][hidden] { display: none; }
+/* /thank-you/ copy variants (data-only="quote|contact|crm|wa|skipped") are toggled with the hidden attribute by js/thanks.js;
+   author display rules (.eyebrow/.note/.cta-row are flex, .checklist strong is block) must never defeat it */
+[data-only][hidden] { display: none !important; }
 
 /* ---------- contact cards ---------- */
 .contact-cards { display: grid; gap: 16px; }
@@ -602,6 +605,9 @@ a.contact-card:hover { border-color: var(--navy); transform: translateY(-2px); }
 .signoff .checklist .ic path { stroke-dasharray: 30; stroke-dashoffset: 30; transition: stroke-dashoffset .45s var(--ease); transition-delay: calc(var(--k, 0) * .12s + .2s); }
 .signoff.in .checklist .ic path, .no-js .signoff .checklist .ic path { stroke-dashoffset: 0; }
 @media (prefers-reduced-motion: reduce) { .signoff .checklist .ic path { stroke-dashoffset: 0; } }
+/* /thank-you/?via=wa: the WhatsApp message is still unsent, so row 1 stays an empty grey circle (js/thanks.js adds .todo) */
+.checklist li.todo .ic { color: var(--ink-3); }
+.checklist li.todo .ic path { opacity: 0; }
 
 /* ---------- coverage map ---------- */
 .coverage { display: grid; gap: 28px; align-items: center; }
