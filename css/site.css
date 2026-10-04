@@ -407,6 +407,9 @@ small { font-size: .875rem; }
 .choice input:checked + span .ic { color: #8ED99A; }
 .form-foot { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; justify-content: space-between; }
 .form-foot .fine { font-size: .88rem; color: var(--ink-3); max-width: 44ch; margin: 0; }
+/* reCAPTCHA v3: Google allows hiding the floating badge only when this disclosure is visible in the form */
+.form-foot .fine.legal { flex-basis: 100%; max-width: none; font-size: .8rem; }
+.grecaptcha-badge { visibility: hidden; }
 .form-status { display: none; padding: 14px 16px; border-radius: 12px; font-weight: 600; }
 .form-status.ok { display: block; background: var(--green-tint); border: 1.5px solid #CDE7D0; color: var(--green-text); }
 .form-status.err { display: block; background: #FDECEA; border: 1.5px solid #F5C6C1; color: var(--danger); }

@@ -116,6 +116,21 @@ def rel(route):
     return '../' * route.count('/')
 
 
+_VER = {}
+def ver(path_):
+    """"css/site.css" → "css/site.css?v=<hash del contenido>". vercel.json cachea css/js 1 día (+7 de
+    stale-while-revalidate): sin esto un visitante con el site.js viejo enviaría el formulario sin token de
+    reCAPTCHA y su lead quedaría retenido como spam ("no token") tras un despliegue."""
+    if path_ not in _VER:
+        import hashlib
+        try:
+            with open(os.path.join(ROOT, path_), 'rb') as f:
+                _VER[path_] = path_ + '?v=' + hashlib.md5(f.read()).hexdigest()[:8]
+        except OSError:
+            _VER[path_] = path_
+    return _VER[path_]
+
+
 def wa_href(text=WA_TEXT):
     from urllib.parse import quote
     return WA + '?text=' + quote(text)
@@ -163,8 +178,8 @@ def head(m, route):
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800&family=Nunito+Sans:ital,wght@0,400;0,600;0,700;1,400&display=swap">
-<link rel="stylesheet" href="{R}css/site.css">
-{''.join('<link rel="stylesheet" href="%s%s">' % (R, c) for c in m.get('css', []))}
+<link rel="stylesheet" href="{R}{ver('css/site.css')}">
+{''.join('<link rel="stylesheet" href="%s%s">' % (R, ver(c)) for c in m.get('css', []))}
 <script>document.documentElement.classList.replace('no-js','js')</script>
 {ld}
 </head>
@@ -277,9 +292,9 @@ def footer(route, m=None):
 </footer>
 <a class="wa-float" href="{wa_href()}" target="_blank" rel="noopener" aria-label="Chat with Wyelee on WhatsApp">{ic('wa')}<span>WhatsApp</span></a>
 {sticky(route)}
-<script src="{R}js/analytics.js" defer></script>
-<script src="{R}js/site.js" defer></script>
-{''.join('<script src="%s%s" defer></script>' % (R, j) for j in m.get('js', []))}
+<script src="{R}{ver('js/analytics.js')}" defer></script>
+<script src="{R}{ver('js/site.js')}" defer></script>
+{''.join('<script src="%s%s" defer></script>' % (R, ver(j)) for j in m.get('js', []))}
 </body>
 </html>
 '''

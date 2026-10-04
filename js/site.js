@@ -128,6 +128,65 @@
     return out;
   }
 
+  /* ---------- reCAPTCHA v3 (invisible, score-based): anti-spam for the lead forms ----------
+     The site key comes from the back office (/crm → Integraciones, or env RECAPTCHA_SITE_KEY) through
+     /api/public/site-config, fetched here on its own (js/analytics.js reads the same endpoint; the two files stay
+     independent). Nothing loads until the visitor touches a lead form that posts to the CRM (first focusin /
+     pointerdown, or the submit itself): never on pages without a form, never on local / GitHub Pages previews.
+     The token is best effort: no key, a blocked script (ad-blocker) or a slow Google all send the lead without it
+     after at most RC_TIMEOUT, and the server decides. A real visitor is never left on "Sending…".
+     The badge is hidden in CSS; Google's required disclosure sits in each form's fine print (.fine.legal). */
+  var RC_TIMEOUT = 5000, rcKeyP = null, rcLibP = null;
+  var RC_OFF = (function () {
+    var h = window.location.hostname;
+    return !h || h === 'localhost' || h === '127.0.0.1' || h === '[::1]' || /\.github\.io$/i.test(h);
+  })();
+  function rcKey() { // → site key ('' when not configured); one request per page, retried only after a failed one
+    if (RC_OFF) return Promise.resolve('');
+    if (!rcKeyP) {
+      try {
+        rcKeyP = fetch('/api/public/site-config', { credentials: 'omit' })
+          .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+          .then(function (c) { return c && typeof c.recaptcha_site_key === 'string' ? c.recaptcha_site_key.trim() : ''; })
+          .catch(function () { rcKeyP = null; return ''; }); // network hiccup: the submit asks again
+      } catch (err) { return Promise.resolve(''); }
+    }
+    return rcKeyP;
+  }
+  function rcLoad() { // → site key once api.js has loaded; rejects if the script is blocked (never injected twice)
+    if (!rcLibP) {
+      rcLibP = rcKey().then(function (key) {
+        if (!key) { rcLibP = null; return ''; }
+        return new Promise(function (resolve, reject) {
+          var s = d.createElement('script');
+          s.src = 'https://www.google.com/recaptcha/api.js?render=' + encodeURIComponent(key);
+          s.async = true;
+          s.onload = function () { resolve(key); };
+          s.onerror = function () { reject(new Error('recaptcha blocked')); };
+          d.head.appendChild(s);
+        });
+      });
+    }
+    return rcLibP;
+  }
+  function rcPrime() { try { rcLoad().catch(function () { /* blocked: the submit goes without a token */ }); } catch (err) { /* never throw */ } }
+  function rcToken(action) { // → token string, or '' on any failure; always settles within RC_TIMEOUT
+    return new Promise(function (resolve) {
+      var timer = setTimeout(function () { resolve(''); }, RC_TIMEOUT);
+      function finish(tok) { clearTimeout(timer); resolve(typeof tok === 'string' ? tok : ''); }
+      try {
+        rcLoad().then(function (key) {
+          var g = window.grecaptcha;
+          if (!key || !g || typeof g.ready !== 'function') return finish('');
+          g.ready(function () {
+            try { Promise.resolve(g.execute(key, { action: action })).then(finish, function () { finish(''); }); }
+            catch (err) { finish(''); }
+          });
+        }).catch(function () { finish(''); });
+      } catch (err) { finish(''); }
+    });
+  }
+
   /* ---------- form submission (quote + contact) ---------- */
   /* Field values in the markup are the human labels; the CRM stores short keys. Unknown values pass through untouched. */
   var VALUE_KEYS = {
@@ -214,6 +273,11 @@
   d.querySelectorAll('form[data-lead]').forEach(function (form) {
     var status = form.querySelector('.form-status'), success = form.querySelector('.form-success') || d.getElementById(form.getAttribute('data-success') || '');
     var kind = form.getAttribute('data-lead') || 'quote';
+    // reCAPTCHA warms up on the first touch of a form that posts to the CRM (a no-op on previews / without a key)
+    if (form.getAttribute('data-endpoint') && !RC_OFF) {
+      form.addEventListener('focusin', rcPrime, { once: true });
+      form.addEventListener('pointerdown', rcPrime, { once: true });
+    }
     /* inline errors: .field.is-invalid shows the <span class="error"> text; aria-invalid for AT */
     function fieldOf(el) { return el && el.closest ? el.closest('.field') : null; }
     function mark(el, bad) { var f = fieldOf(el); if (f) f.classList.toggle('is-invalid', bad); if (bad) el.setAttribute('aria-invalid', 'true'); else el.removeAttribute('aria-invalid'); }
@@ -280,11 +344,14 @@
       }
       if (btn) { btn.setAttribute('data-txt', btn.textContent); btn.disabled = true; btn.textContent = 'Sending…'; }
       if (endpoint) {
-        // JSON to the CRM: fields by name (checkbox → array), source, attribution and browser-reduced photos.
+        // JSON to the CRM: fields by name (checkbox → array), source, attribution, browser-reduced photos and the
+        // reCAPTCHA token (action = form kind), fetched while the photos shrink; '' after RC_TIMEOUT → sent without it.
         var body = payload(form, kind), saved = false;
         body.attribution = attribution();
-        preparePhotos(form).then(function (res) {
+        Promise.all([preparePhotos(form), rcToken(kind)]).then(function (all) {
+          var res = all[0];
           body.photos = res.photos;
+          if (all[1]) body.recaptcha = all[1];
           return fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify(body) })
             .then(function (r) {
               if (!r.ok) throw new Error('HTTP ' + r.status);

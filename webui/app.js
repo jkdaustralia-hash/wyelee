@@ -10,6 +10,7 @@ const state = {
   view: 'kanban', detailId: null,
   filter: 'all', fService: '', fCity: '', q: '', leadsPage: 1, kLimit: {},
   taskScope: 'mine', taskTab: 'open', summary: null,
+  spamLeads: [], spamCount: 0,   // leads retenidos por reCAPTCHA (fuera del pipeline; filtro "Spam" de la tabla)
 };
 
 // ---------- constantes (única fuente en el frontend; lib/app.js es la del backend) ----------
@@ -54,7 +55,33 @@ const ICON = {
   eye: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>',
   menu: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg>',
   photo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>',
+  shield: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M12 8v4M12 16h.01"/></svg>',
 };
+
+// ---------- reCAPTCHA / spam ----------
+// Motivos que guarda el backend (spam_reason) → texto del panel. 'score 0.1' se traduce aparte.
+const SPAM_REASONS = {
+  'no token': 'el navegador no envió la verificación de reCAPTCHA (bot que envía directo al servidor, o script bloqueado)',
+  'invalid token': 'token de reCAPTCHA inválido, caducado o reutilizado',
+  'action mismatch': 'la acción del token no corresponde a este formulario',
+  'hostname mismatch': 'el token se generó en un dominio que no es el del sitio',
+  'no score': 'Google no devolvió puntuación (¿clave que no es v3?)',
+  'unverified limit': 'Google no respondió y ya se habían aceptado sin verificar 3 envíos de esta IP (o 30 del sitio) en la última hora',
+  manual: 'marcado a mano desde el panel',
+};
+// Versión corta para la columna de la tabla (la larga va en la ficha)
+const SPAM_REASONS_SHORT = { 'no token': 'Sin token', 'invalid token': 'Token inválido', 'action mismatch': 'Acción no coincide', 'hostname mismatch': 'Dominio no autorizado', 'no score': 'Sin puntuación', 'unverified limit': 'Sin verificar (cupo)', manual: 'Marcado a mano' };
+function spamReasonLabel(r, short) {
+  const s = String(r || '').trim();
+  const m = s.match(/^score\s+([\d.]+)$/);
+  if (m) return short ? 'Puntuación baja' : `puntuación ${m[1]}, por debajo del umbral`;
+  return (short ? SPAM_REASONS_SHORT[s] : SPAM_REASONS[s]) || s || (short ? 'Sin motivo' : 'sin motivo registrado');
+}
+function fmtScore(v) {
+  if (v === null || v === undefined || v === '' || !isFinite(Number(v))) return '';
+  const n = Math.round(Number(v) * 100) / 100;
+  return n % 1 === 0 ? n.toFixed(1) : String(n);
+}
 
 // ---------- utils ----------
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -382,6 +409,8 @@ async function viewLeads() {
     </div>
     <div class="filters" id="filters">
       ${['all', ...STATUSES].map((f) => `<button class="fbtn ${state.filter === f ? 'active' : ''}" data-f="${f}">${f === 'all' ? 'Todos' : STATUS_LABELS[f]}</button>`).join('')}
+      <span class="fsep" aria-hidden="true"></span>
+      <button class="fbtn fbtn-spam ${state.filter === 'spam' ? 'active' : ''}" data-f="spam" title="Leads retenidos por reCAPTCHA: sin aviso por correo y fuera del pipeline">${ICON.shield}Spam <span class="n" id="spam-n">(${Number(state.spamCount) || 0})</span></button>
       <span class="spacer"></span>
       <select class="sel" id="fl-service" title="Filtrar por servicio"></select>
       <select class="sel" id="fl-city" title="Filtrar por ciudad"></select>
@@ -389,20 +418,29 @@ async function viewLeads() {
     <div class="panel"><div id="leads-table"></div></div>`;
 
   $('#new-lead').addEventListener('click', openNewLead);
-  $('#filters').addEventListener('click', (e) => { const b = e.target.closest('.fbtn'); if (!b) return; state.filter = b.dataset.f; state.leadsPage = 1; $('#filters').querySelectorAll('.fbtn').forEach((x) => x.classList.toggle('active', x === b)); paintLeads(); });
+  $('#filters').addEventListener('click', async (e) => {
+    const b = e.target.closest('.fbtn'); if (!b) return;
+    state.filter = b.dataset.f; state.leadsPage = 1;
+    $('#filters').querySelectorAll('.fbtn').forEach((x) => x.classList.toggle('active', x === b));
+    if (state.filter === 'spam') { try { await loadSpamLeads(); } catch (err) { if (err.message === 'unauth') return; toast('No se pudieron cargar los leads retenidos', 'err'); } }
+    paintFilterSelects();
+    paintLeads();
+  });
   $('#l-search').addEventListener('input', (e) => { state.q = e.target.value; state.leadsPage = 1; paintLeads(); });
   $('#fl-service').addEventListener('change', (e) => { state.fService = e.target.value; state.leadsPage = 1; paintLeads(); });
   $('#fl-city').addEventListener('change', (e) => { state.fCity = e.target.value; state.leadsPage = 1; paintLeads(); });
   await loadLeads();
+  if (state.filter === 'spam') { try { await loadSpamLeads(); } catch (e) { if (e.message === 'unauth') return; } }
   paintFilterSelects();
   paintLeads();
 }
+const spamMode = () => state.filter === 'spam';
 
 function paintFilterSelects() {
   const fs = $('#fl-service'), fc = $('#fl-city'); if (!fs || !fc) return;
   fs.innerHTML = ['<option value="">Todos los servicios</option>', ...Object.entries(services()).map(([k, v]) => `<option value="${k}">${esc(v)}</option>`), '<option value="contact">Solo contacto (sin servicio)</option>'].join('');
   fs.value = state.fService;
-  const cities = [...new Set(state.leads.map((l) => String(l.city || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+  const cities = [...new Set((spamMode() ? state.spamLeads : state.leads).map((l) => String(l.city || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b));
   fc.innerHTML = ['<option value="">Todas las ciudades</option>', ...cities.map((c) => `<option value="${esc(c)}">${esc(c)}</option>`)].join('');
   fc.value = cities.includes(state.fCity) ? state.fCity : '';
   if (fc.value !== state.fCity) state.fCity = '';
@@ -412,8 +450,9 @@ const LEADS_PER_PAGE = 20; // tamaño de página de la tabla de leads
 
 function filteredLeads() {
   const q = state.q.trim().toLowerCase();
-  return state.leads.filter((l) =>
-    (state.filter === 'all' || l.status === state.filter) &&
+  const spam = spamMode();
+  return (spam ? state.spamLeads : state.leads).filter((l) =>
+    (spam || state.filter === 'all' || l.status === state.filter) &&
     (!state.fService || (state.fService === 'contact' ? !l.service : l.service === state.fService)) &&
     (!state.fCity || String(l.city || '').trim() === state.fCity) &&
     (!q || leadSearchText(l).includes(q)));
@@ -421,26 +460,39 @@ function filteredLeads() {
 
 function paintLeads() {
   const wrap = $('#leads-table'); if (!wrap) return;
+  const spam = spamMode();
   const rows = filteredLeads();
-  if (!rows.length) { wrap.innerHTML = `<div class="empty"><div class="big">Sin leads</div>No hay registros con este filtro.</div>`; return; }
+  const spamNote = spam ? `<div class="spam-note">${ICON.shield}<p><b>Retenidos por reCAPTCHA.</b> No avisaron por correo y no cuentan en el pipeline ni en las estadísticas. Si uno es un cliente real, ábrelo y pulsa <b>No es spam</b>: vuelve al pipeline y sale el aviso por correo de nuevo lead.</p></div>` : '';
+  const sn = $('#spam-n'); if (sn) sn.textContent = `(${Number(state.spamCount) || 0})`;
+  if (!rows.length) {
+    wrap.innerHTML = spam
+      ? `${spamNote}<div class="empty"><div class="big">Nada retenido</div>reCAPTCHA no ha bloqueado ninguna solicitud${state.q || state.fService || state.fCity ? ' con este filtro' : ''}.</div>`
+      : `<div class="empty"><div class="big">Sin leads</div>No hay registros con este filtro.</div>`;
+    return;
+  }
 
   const total = rows.length;
   const pages = Math.max(1, Math.ceil(total / LEADS_PER_PAGE));
   state.leadsPage = Math.min(Math.max(1, state.leadsPage), pages);
   const start = (state.leadsPage - 1) * LEADS_PER_PAGE;
   const pageRows = rows.slice(start, start + LEADS_PER_PAGE);
+  // En el filtro Spam, la columna Estado muestra el motivo y la puntuación de reCAPTCHA
+  const stateCell = (l) => spam
+    ? `<span class="status-pill st-spam"><i class="dot"></i>Spam</span>
+       <span class="sub spam-why" title="${esc(spamReasonLabel(l.spam_reason))}">${esc(spamReasonLabel(l.spam_reason, true))}${fmtScore(l.recaptcha_score) ? ` · <b class="mono">${fmtScore(l.recaptcha_score)}</b>` : ''}</span>`
+    : `${statusPill(l.status)}
+        ${l.status === 'nuevo' ? `<span class="sub" style="margin-top:4px">${slaHTML(l)}</span>` : ''}
+        ${l.status === 'perdido' && l.loss_reason ? `<span class="sub">${esc(lossLabel(l.loss_reason))}</span>` : ''}`;
 
-  wrap.innerHTML = `<table><thead><tr>
-    <th>Nombre</th><th>Contacto</th><th>Servicio</th><th>Ciudad / suburb</th><th>Estado</th><th>Fotos</th><th>Creado</th><th>Responsable</th>
+  wrap.innerHTML = `${spamNote}<table><thead><tr>
+    <th>Nombre</th><th>Contacto</th><th>Servicio</th><th>Ciudad / suburb</th><th>${spam ? 'Motivo · puntuación' : 'Estado'}</th><th>Fotos</th><th>${spam ? 'Recibido' : 'Creado'}</th><th>Responsable</th>
     </tr></thead><tbody>
-    ${pageRows.map((l) => `<tr data-id="${l.id}">
+    ${pageRows.map((l) => `<tr data-id="${l.id}"${spam ? ' class="row-spam"' : ''}>
       <td><span class="lead-nm">${esc(leadName(l))}</span><span class="sub">${esc(SOURCE_LABELS[l.source] || l.source || '')}</span></td>
       <td>${esc(l.mobile || '—')}<span class="sub">${esc(l.email || '')}</span></td>
       <td>${chipService(l)}</td>
       <td>${esc(l.city || '—')}<span class="sub">${esc([l.suburb, l.postcode].filter(Boolean).join(' '))}</span></td>
-      <td>${statusPill(l.status)}
-        ${l.status === 'nuevo' ? `<span class="sub" style="margin-top:4px">${slaHTML(l)}</span>` : ''}
-        ${l.status === 'perdido' && l.loss_reason ? `<span class="sub">${esc(lossLabel(l.loss_reason))}</span>` : ''}</td>
+      <td>${stateCell(l)}</td>
       <td>${l.photos ? `<span class="photos-n">${ICON.photo}${l.photos}</span>` : '<span style="color:var(--mute)">—</span>'}</td>
       <td class="nowrap" title="${fmtDateTime(l.created_at)}">${fmtDate(l.created_at)}</td>
       <td>${l.owner_name ? esc(l.owner_name) : '<span style="color:var(--mute)">—</span>'}</td>
@@ -515,7 +567,8 @@ function msgTemplates(l) {
 }
 
 async function loadLeadTasks(leadId) {
-  try { const all = await api('GET', '/api/tasks?scope=all&state=all'); return (all || []).filter((t) => Number(t.lead_id) === Number(leadId)); }
+  // lead_id explícito: así también salen las tareas de un lead retenido como spam (la lista general las excluye)
+  try { const all = await api('GET', `/api/tasks?scope=all&state=all&lead_id=${Number(leadId)}`); return (all || []).filter((t) => Number(t.lead_id) === Number(leadId)); }
   catch (e) { return []; }
 }
 function presetDue(k) {
@@ -546,6 +599,9 @@ async function viewLeadDetail(id) {
   const tpls = msgTemplates(lead);
   const files = lead.files || [];
   const isContact = !lead.service && lead.source === 'contact';
+  const isSpam = Number(lead.spam) === 1;
+  const manualSpam = lead.spam_reason === 'manual';
+  const score = fmtScore(lead.recaptcha_score);
 
   v.innerHTML = `
     <div class="topbar">
@@ -553,16 +609,29 @@ async function viewLeadDetail(id) {
         <button class="backlink" id="back">← Volver a Leads</button>
         <h1 style="margin-top:6px">${esc(leadName(lead))}</h1>
         <div class="detail-sub">
+          ${isSpam ? '<span class="status-pill st-spam"><i class="dot"></i>Spam</span>' : ''}
           ${statusPill(lead.status)}
-          ${slaHTML(lead)}
+          ${isSpam ? '' : slaHTML(lead)}
           ${chipService(lead)}
           <span class="sep">·</span><span>${esc(SOURCE_LABELS[lead.source] || lead.source || '')}</span>
           <span class="sep">·</span><span>Recibido ${fmtDateTime(lead.created_at)}</span>
           <span class="sep">·</span><span class="mono">#${Number(lead.id)}</span>
         </div>
       </div>
-      <div class="tools">${isAdmin() ? '<button class="btn btn-ghost btn-sm danger" id="del">Eliminar</button>' : ''}</div>
+      <div class="tools">${isSpam ? '' : `<button class="btn btn-ghost btn-sm" id="mark-spam" title="Lo retira del pipeline y de las estadísticas, sin borrarlo">Marcar como spam</button>${isAdmin() ? '<button class="btn btn-ghost btn-sm danger" id="del">Eliminar</button>' : ''}`}</div>
     </div>
+
+    ${isSpam ? `<div class="spam-banner" role="alert">
+      <span class="sb-ico">${ICON.shield}</span>
+      <div class="sb-txt">
+        <b>${manualSpam ? 'Marcado como spam desde el panel' : `Retenido como spam por reCAPTCHA — ${esc(spamReasonLabel(lead.spam_reason, true).toLowerCase())}`}${score ? ` <span class="sb-score">puntuación <span class="mono">${score}</span></span>` : ''}</b>
+        <span>${manualSpam ? '' : `Motivo: ${esc(spamReasonLabel(lead.spam_reason))}. `}No se avisó por correo y no aparece en el pipeline, en las estadísticas ni en los contadores. Si es un cliente real, pulsa <b>No es spam</b>: vuelve al pipeline y sale el aviso de nuevo lead.</span>
+      </div>
+      <div class="sb-act">
+        <button class="btn btn-primary btn-sm" id="spam-restore">No es spam</button>
+        ${isAdmin() ? '<button class="btn btn-ghost btn-sm danger" id="spam-del">Eliminar</button>' : ''}
+      </div>
+    </div>` : ''}
 
     <div class="detail-grid">
       <div class="detail-main">
@@ -621,11 +690,34 @@ async function viewLeadDetail(id) {
     </div>`;
 
   $('#back').addEventListener('click', backToLeads);
-  const del = $('#del');
-  if (del) del.addEventListener('click', async () => {
+  const delLead = async () => {
     if (!confirm('¿Eliminar este lead permanentemente? Se borran también sus fotos y su historial.')) return;
-    try { await api('DELETE', `/api/leads/${id}`); await loadLeads(); toast('Lead eliminado'); backToLeads(); }
+    try { await api('DELETE', `/api/leads/${id}`); await loadLeads(); if (isSpam) await loadSpamLeads().catch(() => {}); toast('Lead eliminado'); backToLeads(); }
     catch (e) { if (e.message !== 'unauth') toast('No se pudo eliminar', 'err'); }
+  };
+  [$('#del'), $('#spam-del')].forEach((b) => b && b.addEventListener('click', delLead));
+  // Spam: recuperar (vuelve al pipeline + aviso por correo) o retirar a mano (sin correo)
+  const setSpam = async (spam, btn) => {
+    if (btn) btn.disabled = true;
+    try {
+      const r = await api('PATCH', `/api/leads/${id}/spam`, { spam });
+      await loadLeads();
+      if (state.filter === 'spam' || spam) await loadSpamLeads().catch(() => {});
+      if (spam) toast('Marcado como spam: fuera del pipeline');
+      else {
+        const n = r && r.notification;
+        toast(n === 'sent' ? 'Lead recuperado: vuelve al pipeline y se envió el aviso por correo'
+          : n === 'failed' ? 'Lead recuperado, pero el aviso por correo falló' : 'Lead recuperado: vuelve al pipeline', n === 'failed' ? 'err' : 'ok');
+      }
+      viewLeadDetail(id);
+    } catch (e) { if (btn) btn.disabled = false; if (e.message !== 'unauth') toast('No se pudo actualizar', 'err'); }
+  };
+  const restoreBtn = $('#spam-restore');
+  if (restoreBtn) restoreBtn.addEventListener('click', () => setSpam(false, restoreBtn));
+  const markBtn = $('#mark-spam');
+  if (markBtn) markBtn.addEventListener('click', () => {
+    if (!confirm('¿Marcar este lead como spam? Sale del pipeline, de las estadísticas y de los contadores (no se borra: queda en Leads → Spam).')) return;
+    setSpam(true, markBtn);
   });
   $('#status-sel').addEventListener('click', (e) => {
     const b = e.target.closest('.ss'); if (!b) return;
@@ -863,9 +955,22 @@ function attrHTML(lead) {
     row('utm_term', a.utm_term), row('utm_content', a.utm_content),
     row('Google Click ID', a.gclid), row('Meta Click ID', a.fbclid), row('Microsoft Click ID', a.msclkid), row('TikTok Click ID', a.ttclid),
     ...Object.entries(a).filter(([k, v]) => !known.includes(k) && v && typeof v !== 'object').map(([k, v]) => row(esc(k), String(v))),
+    row('reCAPTCHA', recaptchaLabel(a.recaptcha)),
   ].join('');
   return `<div class="kv">${rows || '<p class="muted">Sin datos de origen.</p>'}</div>
     ${a.user_agent ? `<p class="help" style="margin-top:10px;word-break:break-word">${esc(a.user_agent)}</p>` : ''}`;
+}
+
+// Resultado de reCAPTCHA guardado en la atribución del lead ({ verdict, score, action })
+function recaptchaLabel(rc) {
+  if (!rc || typeof rc !== 'object' || !rc.verdict) return '';
+  const sc = fmtScore(rc.score);
+  const tail = (sc ? ` · puntuación ${sc}` : '') + (rc.action ? ` · acción ${rc.action}` : '');
+  if (rc.verdict === 'ok') return `Humano${tail}`;
+  if (rc.verdict === 'spam') return `Retenido como spam${tail}`;
+  if (rc.verdict === 'unverified') return 'Sin verificar: Google no respondió y el lead se aceptó';
+  if (rc.verdict === 'off') return 'Desactivado (sin secreto o sin clave de sitio)';
+  return String(rc.verdict);
 }
 
 function timelineHTML(lead) {
@@ -878,6 +983,7 @@ function eventHTML(ev) {
   else if (ev.type === 'note') txt = `Nota: ${esc(ev.note)}`;
   else if (ev.type === 'task') txt = `⏰ ${esc(ev.note || 'Tarea creada')}`;
   else if (ev.type === 'task_done') txt = `✓ ${esc(ev.note || 'Tarea completada')}`;
+  else if (ev.type === 'spam') txt = esc(ev.note || 'Cambio de spam');
   else txt = esc(ev.note || ev.type);
   return `<div class="tl ${esc(cls)}"><span class="dot"></span><div class="body"><div class="t">${txt}</div><div class="d">${fmtDateTime(ev.created_at)}${ev.user_name ? ' · ' + esc(ev.user_name) : ''}</div></div></div>`;
 }
@@ -1308,6 +1414,16 @@ function parseSnippets(raw) {
   }));
 }
 const excerpt = (code) => String(code || '').replace(/\s+/g, ' ').trim().slice(0, 90) || '(sin código)';
+// Estado del anti-spam a partir de /api/settings (recaptcha_secret_configured y la clave efectiva son de solo lectura)
+function recaptchaStatus(s) {
+  const hasKey = !!(s.recaptcha_site_key_effective || s.recaptcha_site_key);
+  const secret = !!s.recaptcha_secret_configured;
+  if (hasKey && secret) return { cls: 'ok', text: '<b>Activo</b> — clave de sitio y secreto configurados. Cada envío de /quote/ y /contact/ se verifica con Google.' };
+  if (hasKey) return { cls: 'warn', text: '<b>Falta RECAPTCHA_SECRET en Vercel</b> — el sitio ya pide el token, pero el servidor todavía no lo verifica: los leads entran como siempre.' };
+  if (secret) return { cls: 'warn', text: '<b>Sin clave de sitio</b> — el secreto ya está en Vercel, pero la verificación queda en pausa hasta guardar aquí la clave de sitio (si no, se retendrían todos los leads).' };
+  return { cls: 'off', text: '<b>Sin clave de sitio</b> — anti-spam desactivado: los leads entran como siempre (solo el campo trampa filtra bots).' };
+}
+const clampScore = (v) => { const n = parseFloat(String(v == null ? '' : v).replace(',', '.')); return isFinite(n) ? (Math.round(Math.min(0.9, Math.max(0.1, n)) * 10) / 10).toFixed(1) : '0.5'; };
 
 async function viewIntegrations() {
   const v = $('#view');
@@ -1321,6 +1437,8 @@ async function viewIntegrations() {
   const on = s.tracking_enabled === '1' || s.tracking_enabled === 1;
   const endpoint = `${location.origin}/api/public/site-config`;
   const val = (k) => esc(s[k] || '');
+  const rcFromEnv = s.recaptcha_key_source === 'env';
+  const rcSt = recaptchaStatus(s);
 
   const providerCard = ([key, name, ph, help, ic, color]) => {
     const filled = key === 'google_ads' ? !!s.google_ads_id : !!s[key];
@@ -1349,6 +1467,29 @@ async function viewIntegrations() {
           </div>
           <div class="section-t">Proveedores</div>
           <div class="providers">${PROVIDERS.map(providerCard).join('')}</div>
+        </div>
+
+        <div class="card-box">
+          <div class="section-t">Anti-spam de formularios</div>
+          <div class="provider rc-card ${rcSt.cls === 'ok' ? 'filled' : ''}" data-pv="recaptcha">
+            <div class="pv-head"><span class="pv-ic" style="background:#1A73E8">rC</span><b>reCAPTCHA v3 · anti-spam</b><span class="pv-on" title="${rcSt.cls === 'ok' ? 'Activo' : 'Inactivo'}"></span></div>
+            <div class="rc-status ${rcSt.cls}" id="rc-status"><i></i><span>${rcSt.text}</span></div>
+            <p class="help" style="margin:0 0 12px">Invisible para el visitante (sin casillas ni acertijos). Protege los formularios <code>/quote/</code> y <code>/contact/</code> y funciona aunque el interruptor de etiquetas de arriba esté apagado.</p>
+            <div class="form-row">
+              <div class="field"><label>Clave de sitio (pública)</label>
+                <input id="set-recaptcha_site_key" value="${esc(rcFromEnv ? (s.recaptcha_site_key_effective || '') : (s.recaptcha_site_key || ''))}" placeholder="6Lc…" autocomplete="off" spellcheck="false"${rcFromEnv ? ' disabled' : ''}>
+                <div class="field-help">${rcFromEnv ? 'Viene de la variable <code>RECAPTCHA_SITE_KEY</code> de Vercel, que manda sobre este campo. Para cambiarla, edita la variable en Vercel y vuelve a desplegar.' : 'La que Google llama «clave de sitio». Es pública: el sitio la usa para pedir el token al enviar el formulario.'}</div>
+              </div>
+              <div class="field"><label>Puntuación mínima</label>
+                <input id="set-recaptcha_min_score" type="number" min="0.1" max="0.9" step="0.1" inputmode="decimal" value="${esc(clampScore(s.recaptcha_min_score))}">
+                <div class="field-help">Google puntúa de 0.0 (bot) a 1.0 (humano). Por debajo del umbral el lead queda retenido como spam, sin aviso por correo; puedes recuperarlo en Leads → Spam.</div>
+              </div>
+            </div>
+            <div class="rc-keys">
+              <b>Dónde se obtienen las claves</b>
+              <p>En <a href="https://www.google.com/recaptcha/admin" target="_blank" rel="noopener noreferrer">google.com/recaptcha/admin</a> con la cuenta <b>wyeleeassembly@gmail.com</b> (tipo «Basado en puntuación (v3)», dominios <code>wyeleeassembly.com.au</code> y <code>wyelee.vercel.app</code>). La <b>clave de sitio</b> va en el campo de arriba. La <b>clave secreta</b> va SOLO en Vercel → Settings → Environment Variables como <code>RECAPTCHA_SECRET</code> (y luego Redeploy): nunca aquí, ni en el código, ni por correo.</p>
+            </div>
+          </div>
         </div>
 
         <div class="card-box">
@@ -1443,11 +1584,30 @@ async function viewIntegrations() {
     CODE_FIELDS.forEach(([k]) => { body[k] = $('#set-' + k).value; });
     body.whatsapp_number = body.whatsapp_number.replace(/\D/g, '') || DEFAULT_WA;
     body.snippets = JSON.stringify(snippets.map((sn) => ({ id: sn.id, name: sn.name, position: sn.position, enabled: sn.enabled ? 1 : 0, code: sn.code })));
+    // reCAPTCHA: la clave solo se envía si no viene de la variable de entorno (campo deshabilitado)
+    const rcKey = $('#set-recaptcha_site_key');
+    if (rcKey && !rcKey.disabled) body.recaptcha_site_key = rcKey.value.trim();
+    body.recaptcha_min_score = clampScore($('#set-recaptcha_min_score').value);
     const btns = [$('#int-save'), $('#int-save-2')]; btns.forEach((b) => (b.disabled = true));
-    try { await api('PUT', '/api/settings', body); state.settings = Object.assign({}, state.settings, body); toast('Integraciones guardadas'); v.querySelectorAll('.provider').forEach((p) => { const k = p.dataset.pv === 'google_ads' ? 'google_ads_id' : p.dataset.pv; p.classList.toggle('filled', !!body[k]); }); }
-    catch (e) { if (e.message !== 'unauth') toast(e.message === 'admin only' ? 'Solo administradores' : 'Error al guardar', 'err'); }
+    try {
+      const saved = await api('PUT', '/api/settings', body);
+      state.settings = saved && typeof saved === 'object' ? saved : Object.assign({}, state.settings, body);
+      toast('Integraciones guardadas');
+      v.querySelectorAll('.provider:not(.rc-card)').forEach((p) => { const k = p.dataset.pv === 'google_ads' ? 'google_ads_id' : p.dataset.pv; p.classList.toggle('filled', !!body[k]); });
+      paintRecaptchaCard(state.settings);
+    }
+    catch (e) { if (e.message !== 'unauth') toast(e.message === 'admin only' ? 'Solo administradores' : /RECAPTCHA_SECRET/.test(e.message) ? e.message : 'Error al guardar', 'err'); }
     btns.forEach((b) => (b.disabled = false));
   };
+  // Repinta el estado del anti-spam con lo que devolvió el servidor (umbral normalizado, clave efectiva)
+  function paintRecaptchaCard(st) {
+    const card = v.querySelector('.rc-card'); if (!card || !st) return;
+    const rs = recaptchaStatus(st);
+    card.classList.toggle('filled', rs.cls === 'ok');
+    const box = $('#rc-status'); if (box) { box.className = `rc-status ${rs.cls}`; box.innerHTML = `<i></i><span>${rs.text}</span>`; }
+    const ms = $('#set-recaptcha_min_score'); if (ms) ms.value = clampScore(st.recaptcha_min_score);
+    const key = $('#set-recaptcha_site_key'); if (key && !key.disabled) key.value = st.recaptcha_site_key || '';
+  }
   $('#int-save').addEventListener('click', save);
   $('#int-save-2').addEventListener('click', save);
   $('#int-copy').addEventListener('click', () => navigator.clipboard.writeText(endpoint).then(() => toast('URL copiada')).catch(() => toast('No se pudo copiar', 'err')));
@@ -1601,9 +1761,19 @@ async function viewStats(month) {
 }
 
 // ---------- data loaders ----------
+// /api/leads → { leads, spamCount } (los retenidos como spam no vienen: Kanban, tabla y badge los ignoran).
+// Acepta también el formato antiguo (array) por si la API y el panel se despliegan desfasados.
 async function loadLeads() {
-  state.leads = (await api('GET', '/api/leads')) || [];
+  const r = await api('GET', '/api/leads');
+  state.leads = Array.isArray(r) ? r : ((r && r.leads) || []);
+  if (r && !Array.isArray(r)) state.spamCount = Number(r.spamCount) || 0;
   const b = $('#badge-leads'); if (b) b.textContent = state.leads.length || '';
+  const sn = $('#spam-n'); if (sn) sn.textContent = `(${Number(state.spamCount) || 0})`;
+}
+async function loadSpamLeads() {
+  const r = await api('GET', '/api/leads?spam=1');
+  state.spamLeads = Array.isArray(r) ? r : ((r && r.leads) || []);
+  state.spamCount = r && !Array.isArray(r) ? Number(r.spamCount) || 0 : state.spamLeads.length;
 }
 
 // ============================================================

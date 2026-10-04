@@ -14,6 +14,7 @@ Un panel privado en `https://wyeleeassembly.com.au/crm` que:
 3. **Tareas con recordatorio por correo**: "llamar a este cliente en 2 horas", "confirmar la visita mañana a las 9". El aviso llega al correo del responsable a la hora exacta, además de mostrarse en el panel.
 4. **Integraciones sin tocar código**: IDs de Google Analytics 4, Google Tag Manager, Google Ads, Meta Pixel, TikTok, Microsoft Clarity y Hotjar, más cajas para pegar cualquier código de terceros (chat, reseñas, Calendly…). El sitio público los carga en tiempo de ejecución.
 5. **Acceso solo por enlace mágico** enviado al correo (sin contraseñas).
+6. **Anti-spam con Google reCAPTCHA v3** (invisible) en `/quote/` y `/contact/`: lo que parece bot se guarda **retenido como spam**, sin aviso por correo y fuera del pipeline, y se puede recuperar con un clic (§6.9).
 
 Idioma: el panel está en **español** (para el equipo); todo lo que ve el cliente final (formularios, plantillas de WhatsApp/SMS) está en **inglés**.
 
@@ -50,7 +51,7 @@ Stack: Node ≥ 22, sin frameworks (`node:http`, `node:crypto`, `node:sqlite`), 
 
 Cómo se conecta el sitio con el panel:
 
-- `js/site.js`: los formularios con `data-endpoint="/api/public/lead"` envían un JSON con los campos, la atribución (página, referrer, UTMs, `gclid`) y las fotos reducidas en el navegador (lado mayor 1600 px, JPEG 0.8, máximo 6). Si el endpoint falla (p. ej. en el preview de GitHub Pages, donde no hay API) el formulario cae al comportamiento anterior: abre WhatsApp con el resumen.
+- `js/site.js`: los formularios con `data-endpoint="/api/public/lead"` envían un JSON con los campos, la atribución (página, referrer, UTMs, `gclid`), el token de reCAPTCHA v3 (`recaptcha`, si hay clave de sitio; §6.9) y las fotos reducidas en el navegador (lado mayor 1600 px, JPEG 0.8, máximo 6). Si el endpoint falla (p. ej. en el preview de GitHub Pages, donde no hay API) el formulario cae al comportamiento anterior: abre WhatsApp con el resumen.
 - `js/analytics.js`: en cada página, tras la primera interacción del visitante (o 4 s después de cargar), pide `/api/public/site-config` e inyecta las etiquetas y los fragmentos configurados en el panel. No se ejecuta en `localhost`, `127.0.0.1` ni `*.github.io`. Tras un envío exitoso, `js/site.js` redirige a la **página de gracias** `/thank-you/?s=quote|contact&k=<nonce>` (noindex, fuera del sitemap) y allí `js/analytics.js` dispara una sola vez por nonce los eventos de conversión (`dataLayer.push({event:'wyelee_lead', lead_source})` para GTM, `generate_lead` de GA4, conversión de Google Ads, `Lead` de Meta, `SubmitForm` de TikTok); GA4/Ads/GTM miden la conversión por esa URL. En GTM usa un activador «Evento personalizado» con nombre `wyelee_lead` (variable de capa de datos `lead_source` = quote | contact; `quote_wa` | `contact_wa` cuando el envío cayó a WhatsApp con `&via=wa`: el visitante aún debe pulsar enviar, así que conviene segmentarlos o excluirlos): se envía una sola vez por envío al cargar `/thank-you/`. Un activador «Página vista» sobre `/thank-you/` también funciona, pero cuenta recargas y visitas directas (si se usa, añadir la condición Page URL contiene `k=`). Si el servidor no responde, el envío cae a WhatsApp y la misma página muestra el botón «Open WhatsApp» (`&via=wa`).
 
 ---
@@ -87,7 +88,10 @@ Regenerar el sitio tras editar `_src/*.html` o `_build.py`: `python _build.py` y
 | `ADMIN_EMAIL` | Recomendada | Primer administrador (recibe magic link y notificaciones). Por defecto `juan.garcia@wearedatalab.co`. Solo se usa al crear la base (seed). |
 | `ADMIN_EMAIL_2` | Opcional | Segundo administrador ("Ken Leong"). Por defecto `Kenleong23@wyeleeassembly.com.au`. Solo en el seed. |
 | `CRON_SECRET` | Recomendada | Cadena aleatoria larga. Protege `GET /api/cron/tasks`; Vercel la envía sola como `Authorization: Bearer …` en sus crons cuando la variable existe en el proyecto. |
-| `APP_URL` | Recomendada | `https://wyeleeassembly.com.au`. Base de los enlaces en los correos (magic link, "Abrir la ficha"). Si falta se deduce de las cabeceras `x-forwarded-*` (podría salir el alias `wyelee.vercel.app`). |
+| `APP_URL` | Recomendada | `https://wyeleeassembly.com.au`. Base de los enlaces en los correos (magic link, "Abrir la ficha"). Si falta se deduce de las cabeceras `x-forwarded-*` (podría salir el alias `wyelee.vercel.app`). Su dominio también se acepta como origen válido de los tokens de reCAPTCHA. |
+| `RECAPTCHA_SECRET` | Para activar el anti-spam | **Clave secreta** de reCAPTCHA v3 (google.com/recaptcha/admin). Solo aquí: nunca en el panel, en la BD, en el código ni en los logs. Sin ella el servidor no verifica (los leads entran como siempre). §6.9. |
+| `RECAPTCHA_SITE_KEY` | Opcional | Clave de sitio (pública). Si existe, **manda sobre** la que se guarde en *Integraciones* (el campo del panel aparece deshabilitado). Lo normal es dejarla vacía y ponerla en el panel. |
+| `RECAPTCHA_VERIFY_URL` | No (solo pruebas) | Por defecto `https://www.google.com/recaptcha/api/siteverify`. Existe solo para apuntar a un stub local en pruebas; **no definirla en Vercel**. |
 | `PORT` | Solo local | Puerto del `server.js` (8834). |
 | `SITE_DIR` | Solo local | Carpeta del sitio estático si no es la raíz del repo. |
 | `NODE_ENV` / `VERCEL` | Automáticas | Con `VERCEL` o `NODE_ENV=production` la app se considera en producción: cookies `Secure`, sin `devLink`, HSTS. |
@@ -142,7 +146,7 @@ No hay que crear tablas: `ensureInit()` ejecuta el esquema (`CREATE TABLE IF NOT
 ### 5.4 Variables en Vercel
 
 Proyecto `wyelee` → *Settings* → *Environment Variables* → añadir para **Production** (y Preview si se quiere probar en ramas):
-`TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`, `RESEND_API_KEY`, `MAIL_FROM`, `ADMIN_EMAIL`, `ADMIN_EMAIL_2`, `CRON_SECRET`, `APP_URL`.
+`TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`, `RESEND_API_KEY`, `MAIL_FROM`, `ADMIN_EMAIL`, `ADMIN_EMAIL_2`, `CRON_SECRET`, `APP_URL`, `RECAPTCHA_SECRET` (y opcionalmente `RECAPTCHA_SITE_KEY`; ver §6.9 para el orden recomendado).
 
 Las variables solo aplican a despliegues nuevos: tras guardarlas, *Deployments* → *Redeploy* del último.
 
@@ -183,7 +187,7 @@ Seis columnas: **Nuevo → Contactado → Cotizado → Agendado → Ganado / Per
 
 ### 6.3 Leads (tabla) y ficha
 
-*Leads*: tabla paginada con filtros por estado, servicio y ciudad, y búsqueda. Clic en una fila → ficha.
+*Leads*: tabla paginada con filtros por estado, servicio y ciudad, y búsqueda. Clic en una fila → ficha. El filtro **Spam (n)**, separado de los estados, muestra solo los leads retenidos por reCAPTCHA con su motivo y puntuación (§6.9); el resto de la tabla, el Kanban y el contador del menú nunca los incluyen.
 
 La **ficha** de un lead tiene:
 
@@ -194,6 +198,7 @@ La **ficha** de un lead tiene:
 - Atribución: página desde la que envió, referencia, UTMs y `gclid` (permite saber si vino de Google Ads, Facebook, orgánico…).
 - Control de estado (selector + motivo de pérdida), responsable, **tareas** (§6.4), **línea de tiempo** (creación, cambios de estado, notas, tareas) y campo para nueva nota.
 - *Eliminar* (solo administradores; borra también eventos y fotos).
+- *Marcar como spam* (cualquier usuario): lo retira del pipeline y de las estadísticas sin borrarlo (queda en *Leads → Spam*). Si el lead está retenido como spam, la ficha muestra arriba el aviso **"Retenido como spam por reCAPTCHA — <motivo>"** con los botones *No es spam* y, para administradores, *Eliminar*.
 
 ### 6.4 Tareas y avisos (recordatorios por correo)
 
@@ -223,8 +228,9 @@ Página solo para administradores. Todo lo que se guarda aquí lo lee el sitio p
 2. **Tarjetas por proveedor**: Google Analytics 4 (`G-XXXXXXX`), Google Tag Manager (`GTM-XXXXXX`), Google Ads (`AW-XXXXXXXXX` + etiqueta de conversión, para registrar cada formulario enviado como conversión), Meta Pixel (número), TikTok Pixel, Microsoft Clarity, Hotjar (`hjid`). Con GTM, la conversión se crea con el activador «Evento personalizado» `wyelee_lead` (variable de capa de datos `lead_source` = quote | contact; `quote_wa` | `contact_wa` cuando el envío cayó a WhatsApp con `&via=wa`: el visitante aún debe pulsar enviar, así que conviene segmentarlos o excluirlos), que el sitio envía en `/thank-you/` una sola vez por envío; el activador «Página vista» sobre `/thank-you/` cuenta también recargas y visitas directas.
 3. **Código incrustado**: tres cajas para pegar HTML/JS tal cual lo entrega el proveedor: *Inicio de `<head>`* (verificaciones de propiedad, scripts que deben cargar antes), *Inicio de `<body>`* (p. ej. el `<noscript>` de GTM), *Fin de `<body>`* (widgets de chat, reseñas, Calendly, botones flotantes).
 4. **Fragmentos de terceros**: lista con nombre, posición, interruptor activo/inactivo y código. Permite tener varios códigos identificados y apagar uno sin borrarlo. Los `<script>` que contengan se ejecutan (el cargador los recrea al inyectarlos).
-5. **Notificaciones**: `notify_emails` = correos extra (separados por coma) que también reciben el aviso de cada lead nuevo, además de los administradores; `whatsapp_number` = número que usan las acciones rápidas (por defecto `61432470313`).
-6. *Guardar*. El panel lateral "Cómo funciona" muestra la URL del endpoint y el botón *Ver JSON público* para comprobar lo que el sitio recibirá.
+5. **Anti-spam de formularios**: tarjeta *reCAPTCHA v3 · anti-spam* con el estado (Activo / Falta `RECAPTCHA_SECRET` en Vercel / Sin clave de sitio), la clave de sitio, la puntuación mínima y dónde obtener las claves. No depende del interruptor maestro. Detalle en §6.9.
+6. **Notificaciones**: `notify_emails` = correos extra (separados por coma) que también reciben el aviso de cada lead nuevo, además de los administradores; `whatsapp_number` = número que usan las acciones rápidas (por defecto `61432470313`).
+7. *Guardar*. El panel lateral "Cómo funciona" muestra la URL del endpoint y el botón *Ver JSON público* para comprobar lo que el sitio recibirá.
 
 Tiempos: el JSON se cachea (60 s en el navegador, 5 min en el CDN), y el sitio lo pide tras la primera interacción del visitante o 4 s tras cargar. Un cambio se ve en el sitio en pocos minutos. Para comprobar una etiqueta: abrir el sitio real, hacer clic en cualquier sitio y mirar en la consola/Network o con la extensión Tag Assistant.
 
@@ -241,6 +247,40 @@ La persona entra pidiendo su enlace mágico con ese correo (no hay contraseñas 
 
 Para URLs antiguas o campañas: origen (`/ruta-vieja`) → destino (`/quote/` o URL completa), código 301/302, activar/desactivar, contador de usos. No afectan a `/crm`, `/api` ni a los assets.
 
+### 6.9 Anti-spam: Google reCAPTCHA v3
+
+**Qué hace.** reCAPTCHA v3 es invisible: no pide casillas ni acertijos. Al enviar `/quote/` o `/contact/`, el navegador pide a Google un token para la acción `quote` o `contact` y lo manda con el formulario (`recaptcha`). El servidor lo verifica con Google (`siteverify`, 4 s máximo) y Google devuelve una **puntuación de 0.0 (bot) a 1.0 (humano)**. El campo trampa `website` sigue funcionando como antes (descarta sin guardar).
+
+**Qué pasa con cada envío** (el visitante recibe siempre la misma respuesta `201 {ok:true,id}` y va a `/thank-you/`; un bot no puede saber si lo detectamos):
+
+| Resultado | Qué hace el servidor | Se ve en el lead (`attribution.recaptcha.verdict`) |
+|---|---|---|
+| Puntuación ≥ umbral, acción y dominio correctos | Lead normal: pipeline + aviso por correo | `ok` + puntuación |
+| Sin token, token inválido/caducado/reutilizado, acción que no es la del formulario, dominio que no es `wyeleeassembly.com.au` / `www.` / `wyelee.vercel.app` (o el de `APP_URL`), sin puntuación, o **puntuación < umbral** | **Retenido como spam**: se guarda completo (con fotos) con `spam=1`, motivo (`no token`, `invalid token`, `action mismatch`, `hostname mismatch`, `no score`, `score 0.1`…) y puntuación. **Sin correo**, fuera del Kanban, de la tabla, de las estadísticas, del SLA, de los contadores y de los avisos de tareas | `spam` |
+| Google no responde (caída, timeout de 4 s, error HTTP) o rechaza **nuestro** secreto (`invalid-input-secret`) | **Se acepta como lead normal** (fail-open: una caída de Google nunca hace perder clientes reales). Queda en el log de Vercel. Con cupo: como mucho **3 por IP y 30 en total por hora** (tabla `rate_hits`); pasado el cupo se retiene con motivo `unverified limit` ("Sin verificar (cupo)"), así un bot que coincida con una caída no inunda el pipeline | `unverified` (o `spam` si agotó el cupo) |
+| Sin `RECAPTCHA_SECRET`, o con secreto pero sin clave de sitio | Igual que antes de existir el anti-spam (no se verifica nada) | `off` |
+
+La ficha de cada lead muestra el resultado en *Origen y atribución* → *reCAPTCHA* (Humano · puntuación 0.9 / Retenido como spam / Sin verificar / Desactivado).
+
+**Puesta en marcha** (en este orden, para no retener leads reales por el camino):
+
+1. <https://www.google.com/recaptcha/admin> con la cuenta **wyeleeassembly@gmail.com** → *Crear* → tipo **Basado en puntuación (v3)** → dominios `wyeleeassembly.com.au` y `wyelee.vercel.app` (Google acepta los subdominios, `www.` incluido). Google da dos claves.
+2. **Clave de sitio** (pública) → panel → *Integraciones* → *reCAPTCHA v3 · anti-spam* → *Guardar*. El estado pasa a "Falta RECAPTCHA_SECRET en Vercel": el sitio ya pide tokens (el JSON público se cachea hasta 5 min), pero todavía no se verifica nada.
+3. **Clave secreta** → Vercel → proyecto `wyelee` → *Settings* → *Environment Variables* → `RECAPTCHA_SECRET` (Production) → *Redeploy*. Solo ahí: nunca en el panel, en el código, por correo ni en un chat. El estado pasa a **Activo**.
+4. Probar: enviar `/quote/` desde el dominio real → el lead llega a *Nuevo* y su ficha muestra *reCAPTCHA: Humano · puntuación 0.9* (o similar).
+
+Si el secreto está en Vercel pero falta la clave de sitio, el servidor deja la verificación **en pausa** (si no, todos los leads llegarían sin token y quedarían retenidos) y lo avisa en el log y en la tarjeta de *Integraciones*.
+
+**Recuperar un falso positivo.** *Leads* → filtro **Spam (n)** → abrir el lead → **No es spam**. Vuelve al pipeline en el estado que tenía, queda un evento en la línea de tiempo ("Marcado como NO spam…", con quién y el motivo original) y en ese momento sale el **aviso por correo de nuevo lead**, como si acabara de llegar. Lo pueden hacer administradores y comerciales; *Eliminar* sigue siendo solo de administradores. Al revés, *Marcar como spam* en cualquier ficha lo retira sin enviar nada (motivo `manual`).
+
+**Ajustar el umbral** (*Integraciones* → *Puntuación mínima*, 0.1–0.9, por defecto **0.5**, que es el valor que recomienda Google para empezar). Revisar *Leads → Spam* las primeras semanas:
+- Si aparecen clientes reales retenidos por **puntuación** (motivo "Puntuación baja"), bajar a 0.3–0.4.
+- Si entran bots en el pipeline con puntuación alta, subir a 0.6–0.7.
+- Los retenidos por **sin token / token inválido** no dependen del umbral: casi siempre son bots que envían directo al servidor. Un cliente real solo llega así si su navegador bloqueó el script de Google; por eso conviene mirar la carpeta Spam de vez en cuando.
+- La consola de reCAPTCHA de Google muestra la distribución de puntuaciones del sitio tras unos días de tráfico.
+
+Los leads retenidos no caducan: se acumulan en *Spam* hasta que un administrador los elimine.
+
 ---
 
 ## 7. Seguridad
@@ -249,6 +289,7 @@ Para URLs antiguas o campañas: origen (`/ruta-vieja`) → destino (`/quote/` o 
 - **Sesiones** de **7 días** en cookie `wy_sid`: `HttpOnly`, `SameSite=Lax`, `Secure` en producción, `Path=/`. Se validan contra la tabla `sessions` en cada petición; desactivar un usuario invalida su acceso.
 - **Rate limit por IP** persistido en BD (funciona entre invocaciones serverless): `POST /api/public/lead` 20/hora, `POST /api/auth/request` 6 cada 15 min → `429`.
 - **Honeypot** en los formularios (campo oculto `website`): si viene relleno se responde `201 {ok:true}` sin guardar nada. Además validación estricta de cada campo (formato de correo, código postal de 4 dígitos, listas cerradas de servicio/condición/días/franja/extras, topes de longitud) y de las fotos (máximo 6, ≤ 700 000 caracteres base64 cada una, solo JPEG/PNG/WebP; cuerpo total ≤ 4,5 MB).
+- **reCAPTCHA v3** (§6.9): verificación en el servidor contra Google con `RECAPTCHA_SECRET` (solo variable de entorno; la API nunca la devuelve —`GET /api/settings` solo dice `recaptcha_secret_configured: true|false`— ni se escribe en logs), comprobando acción y dominio además de la puntuación. Lo sospechoso se guarda retenido (sin correo) con la misma respuesta que un lead real; si Google no responde se acepta (fail-open) con un cupo de 3 por IP y 30 en total por hora. Si alguien pega el secreto en el campo de la clave de sitio, `PUT /api/settings` lo rechaza (400) y nunca se publica en `/api/public/site-config`.
 - **Autorización por rol**: `comercial` no puede borrar leads ni ver/editar usuarios, redirecciones o integraciones; `401` sin sesión, `403` sin permiso.
 - **Fotos** solo accesibles con sesión (`/api/leads/:id/files/:fid`, `Cache-Control: private`).
 - **Cabeceras**: `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `X-Frame-Options: DENY` en `/crm`, HSTS en producción. CORS `*` únicamente en las rutas públicas (`/api/public/*`).
@@ -265,30 +306,31 @@ Todas las respuestas son JSON. Base: `/api/…` (también `/crm/api/…`). Auten
 
 | Método y ruta | Rol | Descripción |
 |---|---|---|
-| `GET /api/public/site-config` | P | Config de etiquetas para el sitio (`enabled`, IDs, `custom_*`, `snippets` activos). Cache 60 s / 5 min. |
-| `POST /api/public/lead` | P | Intake de formularios. Body `{ source, name, email, mobile, suburb, postcode, city, service, items, condition, days, time, addons, notes|message, contact, photos:[{name,type,data}], attribution, website }` → `201 { ok, id }`. |
+| `GET /api/public/site-config` | P | Config de etiquetas para el sitio (`enabled`, IDs, `custom_*`, `snippets` activos) + `recaptcha_site_key` (clave efectiva: env `RECAPTCHA_SITE_KEY` o ajuste; se publica aunque `enabled` sea `false`). Cache 60 s / 5 min. |
+| `POST /api/public/lead` | P | Intake de formularios. Body `{ source, name, email, mobile, suburb, postcode, city, service, items, condition, days, time, addons, notes|message, contact, photos:[{name,type,data}], attribution, website, recaptcha }` → `201 { ok, id }` (también cuando queda retenido como spam). `recaptcha` = token v3 con acción = `source`. Guarda `spam`, `spam_reason`, `recaptcha_score` y `attribution.recaptcha = { verdict: ok|spam|unverified|off, score, action }`. |
 | `POST /api/auth/request` | P | `{ email }` → siempre `200 { ok:true }` (+ `devLink` solo en local). |
 | `GET /crm/auth/verify?token=` | P | Valida el enlace → cookie → `302 /crm` (`302 /crm#expired` si no vale). |
 | `POST /api/auth/logout` · `GET /api/me` · `POST /api/auth/stop-impersonate` | S | Sesión actual `{ id, name, email, role, impersonating }`. |
 | `GET /api/meta` | S | Constantes: estados, etiquetas, motivos, servicios, condiciones, extras, roles, `slaHours`. |
-| `GET /api/leads?status=&q=&service=&city=` | S | Lista (máx. 1000, `updated_at DESC`) con `owner_name`, `photos`, `hours_open`, `next_task`, `open_tasks`. |
+| `GET /api/leads?status=&q=&service=&city=&spam=` | S | `{ leads:[…], spamCount }`. `leads` (máx. 1000, `updated_at DESC`) con `owner_name`, `photos`, `hours_open`, `next_task`, `open_tasks`, `spam`, `spam_reason`, `recaptcha_score`; **excluye los retenidos como spam** salvo con `spam=1`, que devuelve solo esos. `spamCount` = total retenido. |
 | `POST /api/leads` | S | Lead manual (`source:'manual'`). |
 | `GET /api/leads/:id` | S | Ficha + `events[]` + `files[]` (sin binario). |
 | `GET /api/leads/:id/files/:fid` | S | Imagen (binario, `Content-Type` = mime). |
 | `PATCH /api/leads/:id` | S | Edita name, email, mobile, suburb, postcode, city, service, items, condition, days, time, addons, notes, owner_id. |
 | `PATCH /api/leads/:id/status` | S | `{ status, loss_reason? }`; `perdido` exige motivo; primer `cotizado` fija `quoted_at`. |
+| `PATCH /api/leads/:id/spam` | S | `{ spam:false }` = *No es spam*: vuelve al pipeline, evento `spam` y envía el aviso de nuevo lead en ese momento. `{ spam:true }` = lo retira (`spam_reason:'manual'`, sin correo). Responde el lead + `notification: sent|skipped|failed|none`. Sin cambio → no hace nada. |
 | `POST /api/leads/:id/note` | S | `{ note }`. |
 | `DELETE /api/leads/:id` | A | Borra lead, eventos, fotos y tareas. |
-| `GET /api/tasks?scope=mine|all&state=open|done|all` | S | Tareas ordenadas por `due_at` con `lead_name`, `user_name`, `overdue`. |
-| `GET /api/tasks/summary` | S | `{ overdue, dueSoon, today, due:[…] }`; las de `due` se marcan `notified` (se avisan una vez). Dispara el respaldo de correo. |
+| `GET /api/tasks?scope=mine|all&state=open|done|all&lead_id=` | S | Tareas ordenadas por `due_at` con `lead_name`, `user_name`, `overdue`. Sin `lead_id` excluye las de leads retenidos como spam. |
+| `GET /api/tasks/summary` | S | `{ overdue, dueSoon, today, due:[…] }`; las de `due` se marcan `notified` (se avisan una vez). Dispara el respaldo de correo. Ignora (y no avisa) las tareas de leads retenidos como spam. |
 | `POST /api/leads/:id/tasks` | S | `{ title, due_at, user_id? }` → `201`; programa el correo en Resend. |
 | `PATCH /api/tasks/:id` | S | `{ done?, title?, due_at?, user_id? }`; cancela/reprograma el correo. |
 | `DELETE /api/tasks/:id` | S | Borra y cancela el correo programado. |
 | `GET /api/cron/tasks` | Bearer `CRON_SECRET` | Envía por correo las tareas vencidas sin aviso (`emailed=0`). Vercel lo llama a diario. |
 | `GET /api/users` · `POST /api/users` · `PATCH /api/users/:id` · `POST /api/users/:id/impersonate` | A | Gestión de usuarios y "Entrar como". |
 | `GET/POST /api/redirects` · `PATCH/DELETE /api/redirects/:id` | A | Redirecciones. |
-| `GET /api/stats?month=YYYY-MM` | S | Embudo, KPIs (`avgHoursToQuote`, `slaRate`, `overdue`…), mensual, por servicio, por ciudad, motivos de pérdida. |
-| `GET /api/settings` · `PUT /api/settings` | A | Claves permitidas: `tracking_enabled`, `ga4_id`, `gtm_id`, `google_ads_id`, `google_ads_label`, `meta_pixel_id`, `tiktok_pixel_id`, `clarity_id`, `hotjar_id`, `custom_head`, `custom_body_start`, `custom_body_end`, `snippets` (JSON), `notify_emails`, `whatsapp_number`. |
+| `GET /api/stats?month=YYYY-MM` | S | Embudo, KPIs (`avgHoursToQuote`, `slaRate`, `overdue`…), mensual, por servicio, por ciudad, motivos de pérdida. Todo **sin** los leads retenidos como spam; `spamCount` informativo. |
+| `GET /api/settings` · `PUT /api/settings` | A | Claves permitidas: `tracking_enabled`, `ga4_id`, `gtm_id`, `google_ads_id`, `google_ads_label`, `meta_pixel_id`, `tiktok_pixel_id`, `clarity_id`, `hotjar_id`, `custom_head`, `custom_body_start`, `custom_body_end`, `snippets` (JSON), `notify_emails`, `whatsapp_number`, `recaptcha_site_key`, `recaptcha_min_score` (0.1–0.9, por defecto `0.5`). Ambas respuestas añaden, de solo lectura: `recaptcha_secret_configured` (bool), `recaptcha_key_source` (`env`\|`setting`\|`none`) y `recaptcha_site_key_effective`. El secreto nunca se devuelve. |
 
 Ejemplo de intake (lo que envía `js/site.js`):
 
@@ -327,3 +369,6 @@ Si `TURSO_DATABASE_URL` está definida (base remota) el script se niega salvo qu
 | El recordatorio de una tarea no llegó a la hora | Ver §6.4: sin `RESEND_API_KEY` o con dominio sin verificar no se programa; el respaldo lo envía al abrir el panel o con el cron diario. Comprobar que el responsable tiene correo correcto. |
 | `500` en todas las rutas de `/crm` | Variables de Turso mal puestas o token caducado; ver *Logs* de la función. Regenerar token con `turso db tokens create wyelee-crm`. |
 | Se perdieron los datos al redesplegar | Solo pasa si no hay `TURSO_DATABASE_URL` (en Vercel el sistema de archivos es efímero). Configurar Turso (§5.2). |
+| Todos los leads caen en *Leads → Spam* | Motivo **Token inválido**: la clave de sitio del panel y `RECAPTCHA_SECRET` no son pareja (de proyectos reCAPTCHA distintos) → copiar las dos del mismo. Motivo **Dominio no autorizado**: el sitio se usa desde un dominio que no está en el proyecto de Google ni en `APP_URL`. Motivo **Sin puntuación**: la clave creada es v2 (casilla), no v3 → crear una v3. Motivo **Sin token** en todos: el sitio no está cargando el script (revisar la clave en *Integraciones* y `/api/public/site-config`; tras guardar, el JSON tarda hasta 5 min en refrescarse). Recuperar los reales con *No es spam*. |
+| Un lead real quedó retenido | Abrirlo en *Leads → Spam* → *No es spam* (vuelve al pipeline y sale el aviso). Si se repite con "Puntuación baja", bajar el umbral en *Integraciones* (§6.9). |
+| Leads con *reCAPTCHA: Sin verificar* | Google no respondió en 4 s o rechazó el secreto (`invalid-input-secret` en *Logs* de Vercel → corregir `RECAPTCHA_SECRET` y redeploy; si el panel y Vercel tienen las claves intercambiadas, ponerlas bien y, como el secreto quedó público, regenerarlas en Google). Se aceptan para no perder clientes, con cupo (3 por IP y 30 en total por hora); los que lo superan quedan en *Spam* como "Sin verificar (cupo)". |
