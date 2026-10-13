@@ -126,7 +126,7 @@ function chipService(l) {
   if (!l.service) return `<span class="chip-service contact">${l.source === 'contact' ? t('chip.contact') : t('chip.noService')}</span>`;
   return `<span class="chip-service ${esc(l.service)}">${esc(svcLabel(l.service) || l.service)}</span>`;
 }
-const leadSearchText = (l) => [l.name, l.email, l.mobile, l.suburb, l.postcode, l.city, l.items].map((x) => x || '').join(' ').toLowerCase();
+const leadSearchText = (l) => [l.name, l.email, l.mobile, l.suburb, l.postcode, l.city, l.items, l.brand].map((x) => x || '').join(' ').toLowerCase();
 // Usuarios asignables: la lista de /api/users (admin) o, si el comercial no puede verla, al menos yo mismo
 function usersForSelect() { const list = state.users.slice(); if (state.me && !list.some((u) => u.id === state.me.id)) list.unshift({ id: state.me.id, name: state.me.name }); return list; }
 function ownerOptions(selectedId) {
@@ -530,7 +530,7 @@ function paintLeads() {
     ${pageRows.map((l) => `<tr data-id="${l.id}"${spam ? ' class="row-spam"' : ''}>
       <td><span class="lead-nm">${esc(leadName(l))}</span><span class="sub">${esc(srcLabel(l.source))}</span></td>
       <td>${esc(l.mobile || '—')}<span class="sub">${esc(l.email || '')}</span></td>
-      <td>${chipService(l)}</td>
+      <td>${chipService(l)}${l.brand ? `<span class="sub brand-sub" title="${esc(t('field.brand'))}: ${esc(l.brand)}">${esc(l.brand)}</span>` : ''}</td>
       <td>${esc(l.city || '—')}<span class="sub">${esc([l.suburb, l.postcode].filter(Boolean).join(' '))}</span></td>
       <td>${stateCell(l)}</td>
       <td>${l.photos ? `<span class="photos-n">${ICON.photo}${l.photos}</span>` : '<span style="color:var(--mute)">—</span>'}</td>
@@ -792,7 +792,7 @@ async function viewLeadDetail(id) {
     const body = {
       name: val('#f-name'), email: val('#f-email'), mobile: val('#f-mobile'),
       suburb: val('#f-suburb'), postcode: val('#f-postcode'), city: val('#f-city'),
-      service: val('#f-service') || null, condition: val('#f-condition') || null,
+      service: val('#f-service') || null, brand: val('#f-brand'), condition: val('#f-condition') || null,
       days: val('#f-days') || null, time: val('#f-time') || null,
       addons: [...v.querySelectorAll('input[name="f-addon"]:checked')].map((c) => c.value).join(','),
       items: $('#f-items').value, notes: $('#f-notes').value,
@@ -872,6 +872,7 @@ function quoteCardHTML(lead, isContact) {
     <div class="section-t">${t('quote.request')}</div>
     <div class="quote-head">
       <div class="qh"><div class="k">${t('field.service')}</div><div class="v">${esc(svcLabel(lead.service) || lead.service || '—')}</div></div>
+      <div class="qh qh-brand"><div class="k">${t('field.brand')}</div><div class="v">${esc(lead.brand || '—')}</div></div>
       <div class="qh"><div class="k">${t('field.condition')}</div><div class="v">${esc(CONDITIONS[lead.condition] || lead.condition || '—')}</div></div>
       <div class="qh"><div class="k">${t('field.days')}</div><div class="v">${esc(DAYS[lead.days] || lead.days || '—')}</div></div>
       <div class="qh"><div class="k">${t('field.slot')}</div><div class="v">${esc(TIMES[lead.time] || lead.time || '—')}</div></div>
@@ -932,7 +933,8 @@ function editCardHTML(lead) {
       <div class="field"><label>${t('field.condition')}</label><select id="f-condition">${opts(CONDITIONS, lead.condition, '—')}</select></div>
       <div class="field"><label>${t('field.owner')}</label><select id="f-owner">${ownerOptions(lead.owner_id)}</select></div>
     </div>
-    <div class="form-row">
+    <div class="form-row-3">
+      <div class="field"><label for="f-brand">${t('field.brand')}</label><input id="f-brand" maxlength="200" placeholder="${esc(t('field.brandPh'))}" value="${esc(lead.brand || '')}"></div>
       <div class="field"><label>${t('field.days')}</label><select id="f-days">${opts(DAYS, lead.days, '—')}</select></div>
       <div class="field"><label>${t('field.timeSlot')}</label><select id="f-time">${opts(TIMES, lead.time, '—')}</select></div>
     </div>
@@ -1078,6 +1080,7 @@ function openNewLead() {
       <div class="field"><label>Postcode</label><input id="n-postcode" inputmode="numeric" maxlength="4"></div>
       <div class="field"><label>${t('field.city')}</label><input id="n-city" placeholder="Adelaide"></div>
     </div>
+    <div class="field"><label for="n-brand">${t('field.brand')}</label><input id="n-brand" maxlength="200" placeholder="${esc(t('field.brandPh'))}"></div>
     <div class="field"><label>${t('field.itemsPerLine')}</label><textarea id="n-items" rows="3"></textarea></div>
     <div class="field"><label>${t('field.notes')}</label><textarea id="n-notes" rows="2"></textarea></div>
     <div class="field"><label>${t('field.owner')}</label><select id="n-owner">${ownerOpts}</select></div>
@@ -1088,7 +1091,7 @@ function openNewLead() {
   $('#n-cancel').addEventListener('click', closeModal);
   $('#n-ok').addEventListener('click', async () => {
     const g = (id) => $(id).value.trim();
-    const body = { name: g('#n-name'), mobile: g('#n-mobile'), email: g('#n-email'), service: g('#n-service') || null, suburb: g('#n-suburb'), postcode: g('#n-postcode'), city: g('#n-city'), items: $('#n-items').value, notes: $('#n-notes').value, owner_id: Number($('#n-owner').value) || null, source: 'manual' };
+    const body = { name: g('#n-name'), mobile: g('#n-mobile'), email: g('#n-email'), service: g('#n-service') || null, brand: g('#n-brand'), suburb: g('#n-suburb'), postcode: g('#n-postcode'), city: g('#n-city'), items: $('#n-items').value, notes: $('#n-notes').value, owner_id: Number($('#n-owner').value) || null, source: 'manual' };
     if (!body.name) { toast(t('newLead.needName'), 'err'); return; }
     if (!body.mobile && !body.email) { toast(t('detail.needContact'), 'err'); return; }
     if (body.postcode && !/^\d{4}$/.test(body.postcode)) { toast(t('detail.postcode4'), 'err'); return; }

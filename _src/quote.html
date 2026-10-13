@@ -76,6 +76,27 @@
               <span class="error" id="q-service-err">Choose a service.</span>
               <span class="hint">Not sure? Furniture assembly covers most flatpack. IKEA kitchen means METOD cabinets only &mdash; <a href="{{R}}ikea-kitchen-assembly/">see what&rsquo;s included</a>.</span>
             </fieldset>
+            <fieldset class="field" data-required-group aria-describedby="q-brand-hint">
+              <legend class="label">Brand</legend>
+              <span class="hint" id="q-brand-hint">Where is it from? Tick all that apply.</span>
+              <div class="choices">
+                <label class="choice"><input type="checkbox" name="brand" value="IKEA" data-label="Brand"><span>IKEA</span></label>
+                <label class="choice"><input type="checkbox" name="brand" value="Kmart" data-label="Brand"><span>Kmart</span></label>
+                <label class="choice"><input type="checkbox" name="brand" value="Fantastic Furniture" data-label="Brand"><span>Fantastic Furniture</span></label>
+                <label class="choice"><input type="checkbox" name="brand" value="Bunnings" data-label="Brand"><span>Bunnings</span></label>
+                <label class="choice"><input type="checkbox" name="brand" value="Officeworks" data-label="Brand"><span>Officeworks</span></label>
+                <label class="choice"><input type="checkbox" name="brand" value="Amart" data-label="Brand"><span>Amart</span></label>
+                <label class="choice"><input type="checkbox" name="brand" value="Harvey Norman" data-label="Brand"><span>Harvey Norman</span></label>
+                <label class="choice"><input type="checkbox" name="brand" value="Temple &amp; Webster" data-label="Brand"><span>Temple &amp; Webster</span></label>
+                <label class="choice"><input type="checkbox" name="brand" value="Other" data-label="Brand" data-other="brand_other"><span>Other</span></label>
+                <label class="choice"><input type="checkbox" name="brand" value="Not sure" data-label="Brand"><span>Not sure</span></label>
+              </div>
+              <div class="field brand-other" data-brand-other>
+                <label for="q-brand-other">Which brand?</label>
+                <input type="text" id="q-brand-other" name="brand_other" maxlength="80" autocomplete="off">
+              </div>
+              <span class="error" id="q-brand-err">Tick the brand &mdash; or Not sure.</span>
+            </fieldset>
             <div class="field">
               <label for="q-items">What needs assembling?</label>
               <span class="hint" id="q-items-hint">Product name, article number or link &mdash; one per line, with quantity</span>
@@ -183,6 +204,7 @@
         <dl class="qs-rows">
           <div><dt>Where</dt><dd class="is-empty" data-qs="where">&mdash;</dd></div>
           <div><dt>Service</dt><dd class="is-empty" data-qs="service">&mdash;</dd></div>
+          <div><dt>Brand</dt><dd class="is-empty" data-qs="brand">&mdash;</dd></div>
           <div><dt>Items</dt><dd class="is-empty" data-qs="items">&mdash;</dd></div>
           <div><dt>Condition</dt><dd class="is-empty" data-qs="condition">&mdash;</dd></div>
           <div><dt>Days &amp; time</dt><dd class="is-empty" data-qs="when">&mdash;</dd></div>

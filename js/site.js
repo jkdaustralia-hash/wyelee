@@ -262,8 +262,12 @@
     Array.prototype.forEach.call(form.elements, function (el) {
       if (!el.name || el.type === 'file' || el.type === 'hidden' || el.type === 'submit' || el.type === 'button' || el.name === 'website') return;
       if ((el.type === 'radio' || el.type === 'checkbox') && !el.checked) return;
+      // free-text field of an "Other" chip (data-other="<its name>"): folded into that chip's line below, never a line of its own
+      if (form.querySelector('[data-other="' + el.name + '"]')) return;
       var label = el.getAttribute('data-label') || (el.closest('.field') && el.closest('.field').querySelector('label, .label') ? el.closest('.field').querySelector('label, .label').textContent.trim() : el.name);
       var val = (el.type === 'checkbox' || el.type === 'radio') ? (el.parentNode.textContent || el.value).trim() : el.value.trim();
+      var other = el.getAttribute('data-other') && form.elements[el.getAttribute('data-other')];
+      if (other && other.value && other.value.trim()) val = other.value.trim(); // "Brand: IKEA, Freedom" instead of "…, Other"
       if (!val) return;
       if (el.type === 'checkbox' && seen[label]) { lines[seen[label] - 1] += ', ' + val; return; }
       lines.push(label + ': ' + val); if (el.type === 'checkbox') seen[label] = lines.length;
@@ -283,6 +287,23 @@
     function mark(el, bad) { var f = fieldOf(el); if (f) f.classList.toggle('is-invalid', bad); if (bad) el.setAttribute('aria-invalid', 'true'); else el.removeAttribute('aria-invalid'); }
     // checkValidity()/reportValidity() dispatch `invalid` on each failing control (does not bubble → capture)
     form.addEventListener('invalid', function (e) { mark(e.target, true); }, true);
+    /* checkbox group that needs at least one tick: <fieldset class="field" data-required-group> (HTML has no `required`
+       for a checkbox group). While none is ticked, the first box carries the group's .error text as its custom validity,
+       so checkValidity()/reportValidity() block the submit, fire `invalid` on it (→ mark(): is-invalid + aria-invalid) and
+       focus the group — exactly like a required radio group. Listens on the fieldset, so it resyncs before the form-level
+       handlers run; a script that ticks a box must dispatch `change` on it (js/quote.js does). */
+    form.querySelectorAll('[data-required-group]').forEach(function (grp) {
+      var boxes = Array.prototype.slice.call(grp.querySelectorAll('input[type="checkbox"]'));
+      if (!boxes.length) return;
+      var err = grp.querySelector('.error'), msg = (err && err.textContent.trim()) || 'Tick at least one.';
+      function sync() {
+        var ok = boxes.some(function (b) { return b.checked; });
+        boxes[0].setCustomValidity(ok ? '' : msg);
+        if (ok) { grp.classList.remove('is-invalid'); boxes.forEach(function (b) { b.removeAttribute('aria-invalid'); }); }
+      }
+      grp.addEventListener('change', sync);
+      sync();
+    });
     form.addEventListener('focusout', function (e) {
       var el = e.target;
       if (!el.matches || !el.matches('input, select, textarea') || /^(radio|checkbox|file)$/.test(el.type)) return;

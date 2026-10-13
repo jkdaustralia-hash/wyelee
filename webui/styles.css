@@ -221,6 +221,7 @@ td .lead-nm{overflow-wrap:anywhere}
 td:first-child{min-width:170px}
 td:nth-child(2){min-width:190px}
 td .sub{overflow-wrap:anywhere}   /* correos larguísimos: se parten en vez de estirar la tabla */
+td .brand-sub{margin-top:4px;max-width:190px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}   /* marca bajo el servicio: una línea, completa en el title */
 .status-pill{display:inline-flex;align-items:center;gap:6px;font-family:var(--display);font-weight:700;font-size:.62rem;letter-spacing:.05em;text-transform:uppercase;padding:4px 10px;border-radius:100px;white-space:nowrap}
 .status-pill .dot{width:6px;height:6px;border-radius:50%;background:currentColor;display:inline-block}
 .st-nuevo{background:var(--blue-soft);color:var(--blue)}
@@ -381,6 +382,7 @@ td .spam-why b{color:var(--text)}
 .qh{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
 .qh .k{font-family:var(--display);font-weight:700;font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);margin-bottom:4px}
 .qh .v{font-family:var(--display);font-weight:800;font-size:.92rem;color:var(--text);line-height:1.2}
+.qh-brand .v{overflow-wrap:anywhere}   /* 'IKEA, Kmart, Other: …' puede ser largo */
 .gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px}
 .gallery .ph{aspect-ratio:1;border-radius:10px;overflow:hidden;border:1px solid var(--line);background:var(--fog);cursor:zoom-in;padding:0;transition:.15s}
 .gallery .ph:hover{border-color:var(--green-ui);transform:translateY(-2px);box-shadow:var(--shadow-sm)}

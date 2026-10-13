@@ -34,6 +34,10 @@
 .legend-pict.i24 svg { stroke-width: 1.1; }
 .opt { font-family: var(--font-body); font-weight: 400; font-size: .85rem; color: var(--ink-3); }
 .qform .field .hint a { color: var(--green-text); font-weight: 600; }
+/* brand "Other" free-text field: js/quote.js adds .is-open while the Other chip is ticked; without JS it simply shows.
+   A class, not [hidden]: .field's display:grid would defeat the attribute. */
+.qform .brand-other { margin-top: 6px; }
+.js .qform .brand-other:not(.is-open) { display: none; }
 /* service chips carry a small manual pictogram (64-grid, so a heavier stroke than .ic) */
 .svc { width: 22px; height: 22px; flex: none; fill: none; stroke: currentColor; stroke-width: 3.6; stroke-linecap: round; stroke-linejoin: round; }
 .choice input:checked + span .svc { color: #8ED99A; }

@@ -20,6 +20,39 @@
     f.items.value = (f.items.value ? f.items.value + '\n' : '') + other + ' × 1';
   }
 
+  /* ---------- brand: "Other" reveals a free-text field, "Not sure" excludes the rest, IKEA kitchen ticks IKEA ----------
+     The "at least one" rule itself lives in js/site.js ([data-required-group]). Listens on the fieldset, so the boxes are
+     settled before the form-level handlers (sheet refresh, inline errors) see the change. */
+  var brands = Array.prototype.slice.call(form.querySelectorAll('input[name="brand"]'));
+  var otherBox = form.querySelector('input[name="brand"][data-other]'), otherIn = f.brand_other;
+  var otherWrap = form.querySelector('[data-brand-other]'), brandSet = brands.length ? brands[0].closest('fieldset') : null;
+  function syncOther() { // shown (CSS .is-open) only while "Other" is ticked; unticking clears what was typed
+    if (!otherWrap) return;
+    var on = !!(otherBox && otherBox.checked);
+    otherWrap.classList.toggle('is-open', on);
+    if (!on && otherIn) otherIn.value = '';
+  }
+  if (brandSet) {
+    brandSet.addEventListener('change', function (e) {
+      var el = e.target;
+      if (el.name !== 'brand') return;
+      if (el.checked) brands.forEach(function (b) { // "Not sure" and the brands are mutually exclusive
+        if (b !== el && (el.value === 'Not sure') !== (b.value === 'Not sure')) b.checked = false;
+      });
+      syncOther();
+    });
+  }
+  syncOther();
+  // Picking "IKEA kitchen" (or arriving with ?svc=kitchen) ticks IKEA when no brand is ticked yet; never unticks anything.
+  function kitchenBrand() {
+    var svc = form.querySelector('input[name="service"]:checked');
+    var ikea = form.querySelector('input[name="brand"][value="IKEA"]');
+    if (!svc || svc.value !== 'kitchen' || !ikea || brands.some(function (b) { return b.checked; })) return;
+    ikea.checked = true;
+    ikea.dispatchEvent(new Event('change', { bubbles: true })); // validity (site.js), sheet and inline error follow
+  }
+  form.addEventListener('change', function (e) { if (e.target.name === 'service') kitchenBrand(); });
+
   /* ---------- live quote sheet (right rail) ---------- */
   var sheet = d.querySelector('[data-quote-sheet]');
   function picked(name) {
@@ -38,6 +71,9 @@
     if (f.city.value) where = where ? where + ', ' + f.city.value : f.city.value;
     set('where', where);
     set('service', picked('service'));
+    set('brand', brands.filter(function (b) { return b.checked; }).map(function (b) {
+      return b === otherBox && otherIn && otherIn.value.trim() ? otherIn.value.trim() : b.value; // "Other" → the typed brand
+    }).join(', '));
     var n = f.items.value.split('\n').filter(function (l) { return l.trim(); }).length;
     set('items', n ? n + (n === 1 ? ' item' : ' items') : '');
     set('condition', picked('condition'));
@@ -47,6 +83,7 @@
   form.addEventListener('input', refresh);
   form.addEventListener('change', refresh);
   refresh();
+  kitchenBrand(); // ?svc=kitchen prefill above
 
   /* ---------- photos: size check, inline error, "n photos attached" ---------- */
   var photos = f.photos, pf = photos && photos.closest('.field'), list = pf && pf.querySelector('[data-photo-list]');

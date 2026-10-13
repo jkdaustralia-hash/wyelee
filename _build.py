@@ -433,7 +433,7 @@ def main():
 - [IKEA Kitchen Assembly]({SITE}ikea-kitchen-assembly/): assembly of IKEA METOD kitchen cabinets (carcasses, doors, drawers, hinges, legs, plinths). No plumbing, electrical or benchtop work.
 
 ## Get a quote
-- [Quote form]({SITE}quote/): suburb and postcode, items (name, article number or link), condition, photos, preferred days — quote within 24 hours.
+- [Quote form]({SITE}quote/): suburb and postcode, brand (IKEA, Kmart and other stores), items (name, article number or link), condition, photos, preferred days — quote within 24 hours.
 - [Contact]({SITE}contact/)
 ''')
     print('OK', len(routes), 'páginas')

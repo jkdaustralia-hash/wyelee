@@ -188,17 +188,18 @@ Seis columnas: **Nuevo → Contactado → Cotizado → Agendado → Ganado / Per
 
 ### 6.3 Leads (tabla) y ficha
 
-*Leads*: tabla paginada con filtros por estado, servicio y ciudad, y búsqueda. Clic en una fila → ficha. El filtro **Spam (n)**, separado de los estados, muestra solo los leads retenidos por reCAPTCHA con su motivo y puntuación (§6.9); el resto de la tabla, el Kanban y el contador del menú nunca los incluyen.
+*Leads*: tabla paginada con filtros por estado, servicio y ciudad, y búsqueda (nombre, correo, móvil, suburbio, código postal, artículos y marca). Bajo el servicio de cada fila aparece en pequeño la **marca** del mueble (completa al pasar el ratón). Clic en una fila → ficha. El filtro **Spam (n)**, separado de los estados, muestra solo los leads retenidos por reCAPTCHA con su motivo y puntuación (§6.9); el resto de la tabla, el Kanban y el contador del menú nunca los incluyen.
 
 La **ficha** de un lead tiene:
 
 - Cabecera con nombre, estado y SLA.
 - **Acciones rápidas** con plantillas en inglés: **WhatsApp** (abre `wa.me/61…` con "Hi <name>, this is Wyelee about your assembly quote…"), **SMS**, **Llamar**, **Correo**.
-- Datos de la cotización: servicio, artículos, condición (nuevo en caja / parcialmente armado / ya armado), días y franja, extras (retiro de embalaje, anclaje a pared, desarme de muebles viejos), notas, ubicación. Se editan **en línea** (clic en el valor).
+- Datos de la cotización: servicio, **marca** (de dónde es el mueble; ver abajo), artículos, condición (nuevo en caja / parcialmente armado / ya armado), días y franja, extras (retiro de embalaje, anclaje a pared, desarme de muebles viejos), notas, ubicación. Se editan **en línea** (clic en el valor).
 - **Galería de fotos** que envió el cliente (clic → grande). Las fotos solo se ven con sesión iniciada.
 - Atribución: página desde la que envió, referencia, UTMs y `gclid` (permite saber si vino de Google Ads, Facebook, orgánico…).
 - Control de estado (selector + motivo de pérdida), responsable, **tareas** (§6.4), **línea de tiempo** (creación, cambios de estado, notas, tareas) y campo para nueva nota.
 - *Eliminar* (solo administradores; borra también eventos y fotos).
+- **Marca** (`leads.brand`): el formulario `/quote/` pregunta *Brand — Where is it from?* con casillas IKEA, Kmart, Fantastic Furniture, Bunnings, Officeworks, Amart, Harvey Norman, Temple & Webster, Other (con el campo *Which brand?*) y Not sure. Se guarda como texto en inglés, igual que el servicio: `IKEA, Kmart, Other: Freedom` (máx. 200 caracteres; «Other» siempre al final, «Not sure» solo si no marcó otra). Los mensajes de contacto no tienen marca. En la ficha se ve junto al servicio y se edita como texto libre en *Editar datos*; *+ Lead manual* también tiene el campo. El aviso de nuevo lead por correo incluye la fila *Marca* / *Brand* (si está vacía no aparece).
 - *Marcar como spam* (cualquier usuario): lo retira del pipeline y de las estadísticas sin borrarlo (queda en *Leads → Spam*). Si el lead está retenido como spam, la ficha muestra arriba el aviso **"Retenido como spam por reCAPTCHA — <motivo>"** con los botones *No es spam* y, para administradores, *Eliminar*.
 
 ### 6.4 Tareas y avisos (recordatorios por correo)
@@ -290,9 +291,10 @@ El panel funciona en **español** y en **inglés**. El idioma es **de cada perso
 - **Cambiar el idioma**: conmutador **ES | EN** en la barra lateral, junto al nombre. Se guarda en la cuenta (`PATCH /api/me {lang}`), así que se mantiene en cualquier navegador o dispositivo. En la pantalla de entrada (sin sesión) hay el mismo conmutador; ahí se usa la última elección de ese navegador o, si no hay, el idioma del navegador (español si empieza por `es`, si no inglés). Al entrar manda el idioma guardado en la cuenta.
 - **«Entrar como»**: el idioma es el del administrador que entró, no el del usuario suplantado; cambiarlo mientras se ayuda a alguien no toca el idioma (ni los correos) de esa persona.
 - **Correos del sistema en el idioma de quien los recibe**: el enlace de acceso, en el idioma de ese usuario; el recordatorio de tarea, en el del responsable (sin responsable: a cada administrador en el suyo); el aviso de nuevo lead y el de «recuperado de spam», un correo por idioma (los administradores se agrupan por su idioma; los correos extra de *Integraciones → Notificaciones* que no son usuarios del panel, en inglés). Fechas en horario de Adelaide con formato `es-CO` o `en-AU`. Quién recibe qué no cambia: solo el idioma. Los datos del cliente (nombre, artículos, notas) nunca se traducen.
+- **Datos que se muestran tal cual** (en inglés, como los deja el sitio): servicio, condición, días, franja, extras y **marca** (`Other: …`, `Not sure`).
 - **Lo que no cambia de idioma**: el sitio y todo lo que ve el cliente final (formularios, mensajes de error de `/api/public/*`, plantillas de WhatsApp/SMS/correo de las acciones rápidas) siguen siempre en inglés. Las notas que escribe el equipo se muestran tal cual se escribieron.
 - **Línea de tiempo**: las notas automáticas (lead recibido, creado a mano, tarea creada/hecha/reabierta, spam) se guardan en español como siempre y, desde esta versión, con sus datos en `lead_events.meta`; en inglés se muestran traducidas (las antiguas, sin `meta`, se traducen por patrón).
-- **Técnico**: el panel envía la cabecera `X-Wy-Lang: es|en` en cada llamada; el servidor responde los errores en ese idioma (si falta: el del usuario; sin sesión: español) con la forma `{ error: "<texto>", code: "<clave estable>" }`. `GET /api/meta` mantiene las etiquetas en español y añade `statusLabelsI18n`, `lossReasonsI18n`, `roleLabelsI18n` y `sourceLabelsI18n` con `{ es, en }`. La migración es automática al arrancar (`ALTER TABLE users ADD COLUMN lang`, `ALTER TABLE lead_events ADD COLUMN meta` + relleno idempotente de `lang`).
+- **Técnico**: el panel envía la cabecera `X-Wy-Lang: es|en` en cada llamada; el servidor responde los errores en ese idioma (si falta: el del usuario; sin sesión: español) con la forma `{ error: "<texto>", code: "<clave estable>" }`. `GET /api/meta` mantiene las etiquetas en español y añade `statusLabelsI18n`, `lossReasonsI18n`, `roleLabelsI18n` y `sourceLabelsI18n` con `{ es, en }`. La migración es automática al arrancar (`ALTER TABLE users ADD COLUMN lang`, `ALTER TABLE lead_events ADD COLUMN meta` + relleno idempotente de `lang`; igual con `ALTER TABLE leads ADD COLUMN brand` para la marca).
 
 ---
 
@@ -320,17 +322,17 @@ Todas las respuestas son JSON. Base: `/api/…` (también `/crm/api/…`). Auten
 | Método y ruta | Rol | Descripción |
 |---|---|---|
 | `GET /api/public/site-config` | P | Config de etiquetas para el sitio (`enabled`, IDs, `custom_*`, `snippets` activos) + `recaptcha_site_key` (clave efectiva: env `RECAPTCHA_SITE_KEY` o ajuste; se publica aunque `enabled` sea `false`). Cache 60 s / 5 min. |
-| `POST /api/public/lead` | P | Intake de formularios. Body `{ source, name, email, mobile, suburb, postcode, city, service, items, condition, days, time, addons, notes|message, contact, photos:[{name,type,data}], attribution, website, recaptcha }` → `201 { ok, id }` (también cuando queda retenido como spam). `recaptcha` = token v3 con acción = `source`. Guarda `spam`, `spam_reason`, `recaptcha_score` y `attribution.recaptcha = { verdict: ok|spam|unverified|off, score, action }`. |
+| `POST /api/public/lead` | P | Intake de formularios. Body `{ source, name, email, mobile, suburb, postcode, city, service, brand, brand_other, items, condition, days, time, addons, notes|message, contact, photos:[{name,type,data}], attribution, website, recaptcha }` → `201 { ok, id }` (también cuando queda retenido como spam). `brand` = array de casillas (`["IKEA","Other"]`) o texto separado por comas; `brand_other` = texto de *Which brand?* (máx. 80, sin HTML). Se guarda `leads.brand` = `IKEA, Other: Freedom`: solo las marcas conocidas (grafía canónica, sin duplicados; lo desconocido se descarta), `Other[: texto]` al final, `Not sure` solo si va sola; sin marca → `null` (siempre `null` en `contact`). `recaptcha` = token v3 con acción = `source`. Guarda `spam`, `spam_reason`, `recaptcha_score` y `attribution.recaptcha = { verdict: ok|spam|unverified|off, score, action }`. |
 | `POST /api/auth/request` | P | `{ email }` → siempre `200 { ok:true }` (+ `devLink` solo en local). |
 | `GET /crm/auth/verify?token=` | P | Valida el enlace → cookie → `302 /crm` (`302 /crm#expired` si no vale). |
 | `POST /api/auth/logout` · `GET /api/me` · `POST /api/auth/stop-impersonate` | S | Sesión actual `{ id, name, email, role, lang, impersonating }` (`lang` = idioma de la persona; en «Entrar como», el del administrador). |
 | `PATCH /api/me` | S | `{ lang: 'es'|'en' }` guarda el idioma propio (panel + correos que recibe) → misma respuesta que `GET /api/me`; otro valor → `400 invalid_lang`. |
-| `GET /api/meta` | S | Constantes: estados, etiquetas, motivos, servicios, condiciones, extras, roles, `slaHours` (etiquetas en español, como siempre) + `langs`, `statusLabelsI18n`, `lossReasonsI18n`, `roleLabelsI18n`, `sourceLabelsI18n` (`{ es:{…}, en:{…} }`). |
-| `GET /api/leads?status=&q=&service=&city=&spam=` | S | `{ leads:[…], spamCount }`. `leads` (máx. 1000, `updated_at DESC`) con `owner_name`, `photos`, `hours_open`, `next_task`, `open_tasks`, `spam`, `spam_reason`, `recaptcha_score`; **excluye los retenidos como spam** salvo con `spam=1`, que devuelve solo esos. `spamCount` = total retenido. |
-| `POST /api/leads` | S | Lead manual (`source:'manual'`). |
+| `GET /api/meta` | S | Constantes: estados, etiquetas, motivos, servicios, condiciones, extras, roles, `slaHours` (etiquetas en español, como siempre), `brands` (marcas del formulario) + `langs`, `statusLabelsI18n`, `lossReasonsI18n`, `roleLabelsI18n`, `sourceLabelsI18n` (`{ es:{…}, en:{…} }`). |
+| `GET /api/leads?status=&q=&service=&city=&spam=` | S | `{ leads:[…], spamCount }`. `q` busca en nombre, correo, móvil, suburbio, código postal, artículos y marca. `leads` (máx. 1000, `updated_at DESC`) con todas las columnas (incl. `brand`), `owner_name`, `photos`, `hours_open`, `next_task`, `open_tasks`, `spam`, `spam_reason`, `recaptcha_score`; **excluye los retenidos como spam** salvo con `spam=1`, que devuelve solo esos. `spamCount` = total retenido. |
+| `POST /api/leads` | S | Lead manual (`source:'manual'`). Mismos campos; `brand` es texto libre (se limpia: sin HTML, marcas conocidas con su grafía, máx. 200). |
 | `GET /api/leads/:id` | S | Ficha + `events[]` + `files[]` (sin binario). |
 | `GET /api/leads/:id/files/:fid` | S | Imagen (binario, `Content-Type` = mime). |
-| `PATCH /api/leads/:id` | S | Edita name, email, mobile, suburb, postcode, city, service, items, condition, days, time, addons, notes, owner_id. |
+| `PATCH /api/leads/:id` | S | Edita name, email, mobile, suburb, postcode, city, service, brand (texto libre, máx. 200; vacío → `null`), items, condition, days, time, addons, notes, owner_id. |
 | `PATCH /api/leads/:id/status` | S | `{ status, loss_reason? }`; `perdido` exige motivo; primer `cotizado` fija `quoted_at`. |
 | `PATCH /api/leads/:id/spam` | S | `{ spam:false }` = *No es spam*: vuelve al pipeline, evento `spam` y envía el aviso de nuevo lead en ese momento. `{ spam:true }` = lo retira (`spam_reason:'manual'`, sin correo). Responde el lead + `notification: sent|skipped|failed|none`. Sin cambio → no hace nada. |
 | `POST /api/leads/:id/note` | S | `{ note }`. |
@@ -352,6 +354,7 @@ Ejemplo de intake (lo que envía `js/site.js`):
 curl -X POST http://localhost:8834/api/public/lead -H "Content-Type: application/json" -d '{
   "source":"quote","name":"Jane Citizen","email":"jane@example.com","mobile":"0491 570 006",
   "suburb":"Norwood","postcode":"5067","city":"Adelaide","service":"furniture",
+  "brand":["IKEA","Kmart","Other"],"brand_other":"Freedom",
   "items":"2 x IKEA BILLY bookcase","condition":"new","days":"weekdays","time":"morning",
   "addons":["packaging"],"notes":"Ground floor","photos":[],
   "attribution":{"page":"/quote/","referrer":"https://www.google.com/","utm_source":"google","utm_medium":"cpc"}

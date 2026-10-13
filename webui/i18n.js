@@ -7,6 +7,7 @@
 //  · Las plantillas de mensajes al cliente (WhatsApp/SMS/correo) son siempre en inglés.
 // ============================================================
 
+// La marca del mueble (leads.brand: 'IKEA, Kmart, Other: Freedom') también es dato en inglés: se muestra tal cual.
 // Cada entrada: clave → [es, en]. Un valor puede ser { one, other } (plural según vars.n).
 const I18N_PAIRS = {
   // ---------- app / idioma ----------
@@ -102,6 +103,8 @@ const I18N_PAIRS = {
   'field.mobile': ['Móvil', 'Mobile'],
   'field.city': ['Ciudad', 'City'],
   'field.service': ['Servicio', 'Service'],
+  'field.brand': ['Marca', 'Brand'],
+  'field.brandPh': ['p. ej. IKEA, Kmart', 'e.g. IKEA, Kmart'],
   'field.condition': ['Condición', 'Condition'],
   'field.owner': ['Responsable', 'Assigned to'],
   'field.days': ['Días', 'Days'],
