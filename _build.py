@@ -6,8 +6,10 @@
    Formato de fragmento: primera línea  <!--meta {json} -->  y luego el HTML del <main>.
    Claves meta: route ("" = home, "quote/"…), title, description, og (imagen relativa a img/),
                 crumb (etiqueta de migas), nav (clave del enlace activo), service (dict opcional
-                para JSON-LD Service), body_class (opcional). Las FAQ (<details class="faq-item">)
-                se convierten solas en FAQPage JSON-LD.
+                para JSON-LD Service), body_class (opcional), css/js (listas de archivos solo de esa
+                página), noindex, gallery (true → la página es ImageGallery JSON-LD con un ImageObject por
+                cada <a class="shot" data-w data-h data-caption><img alt>, ver our-work/). Las FAQ
+                (<details class="faq-item">) se convierten solas en FAQPage JSON-LD.
 """
 import json, os, re, io, html as H
 
@@ -32,7 +34,7 @@ SERVICES = [
     ('disassembly-service/', 'Disassembly Service', 'Dismantled and labelled for your move'),
     ('ikea-kitchen-assembly/', 'IKEA Kitchen Assembly', 'METOD cabinets, basic scope'),
 ]
-PAGES_ORDER = ['', 'furniture-assembly/', 'wardrobe-assembly/', 'disassembly-service/', 'ikea-kitchen-assembly/', 'quote/', 'contact/']
+PAGES_ORDER = ['', 'furniture-assembly/', 'wardrobe-assembly/', 'disassembly-service/', 'ikea-kitchen-assembly/', 'our-work/', 'quote/', 'contact/']
 
 
 # ─────────────────────────── SVG sprite (icons used by all pages) ───────────────────────────
@@ -66,6 +68,7 @@ ICONS = {
     'sparkle': '<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6.3 6.3l2.8 2.8M14.9 14.9l2.8 2.8M6.3 17.7l2.8-2.8M14.9 9.1l2.8-2.8"/>',
     'move': '<path d="M5 12h14M12 5l7 7-7 7"/><path d="M3 5v14"/>',
     'chevron': '<path fill="currentColor" stroke="none" d="M3 3h9l5 9-5 9H3l5-9z"/>',
+    'zoom': '<circle cx="10.5" cy="10.5" r="6.5"/><path d="m20 20-4.9-4.9M10.5 8v5M8 10.5h5"/>',
 }
 
 
@@ -206,6 +209,7 @@ def header(route):
         <button type="button" aria-expanded="false" aria-haspopup="true"{services_cur.replace('aria-current', 'data-current')}>Services {ic('chev-down')}</button>
         <ul class="menu">{menu}</ul>
       </div>
+      <a href="{R}our-work/"{cur(route, 'our-work/')}>Our work</a>
       <a href="{R}contact/"{cur(route, 'contact/')}>Contact</a>
     </nav>
     <div class="header-cta">
@@ -232,6 +236,7 @@ def header(route):
         <a href="{R}disassembly-service/"{cur(route, 'disassembly-service/')}>Disassembly Service</a>
         <a href="{R}ikea-kitchen-assembly/"{cur(route, 'ikea-kitchen-assembly/')}>IKEA Kitchen Assembly</a>
       </div>
+      <a href="{R}our-work/"{cur(route, 'our-work/')}>Our work</a>
       <a href="{R}contact/"{cur(route, 'contact/')}>Contact</a>
     </nav>
     <div class="drawer-cta">
@@ -286,7 +291,7 @@ def footer(route, m=None):
     </div>
     <div class="footer-bottom">
       <span>© <span data-year>{YEAR}</span> {BRAND} — {TAGLINE}</span>
-      <span><a href="{R}quote/">Get a quote</a> · <a href="{R}contact/">Contact</a></span>
+      <span><a href="{R}our-work/">Our work</a> · <a href="{R}quote/">Get a quote</a> · <a href="{R}contact/">Contact</a></span>
     </div>
   </div>
 </footer>
@@ -325,11 +330,26 @@ def faqs_from(html_):
     return out
 
 
+def gallery_from(html_):
+    """Photos of a gallery page (meta "gallery": true): every <a class="shot…" href="…img/…jpg" data-w data-h data-caption><img alt>
+       becomes an ImageObject (full-size file, its caption and alt). Used by our-work/ → ImageGallery JSON-LD."""
+    out = []
+    for m in re.finditer(r'<a class="shot[^"]*" href="(?:\.\./)*(img/[^"]+)" data-w="(\d+)" data-h="(\d+)" data-caption="([^"]*)"[^>]*>\s*<img [^>]*?alt="([^"]*)"', html_):
+        out.append({'@type': 'ImageObject', 'contentUrl': SITE + m.group(1), 'url': SITE + m.group(1),
+                    'width': int(m.group(2)), 'height': int(m.group(3)),
+                    'caption': H.unescape(m.group(4)), 'description': H.unescape(m.group(5))})
+    return out
+
+
 def jsonld(m, route):
     graph = [org()]
     graph.append({'@type': 'WebSite', '@id': SITE + '#website', 'url': SITE, 'name': BRAND, 'publisher': {'@id': SITE + '#business'}, 'inLanguage': 'en-AU'})
     page = {'@type': 'WebPage', '@id': SITE + route + '#webpage', 'url': SITE + route, 'name': m['title'], 'description': m['description'],
             'isPartOf': {'@id': SITE + '#website'}, 'about': {'@id': SITE + '#business'}, 'inLanguage': 'en-AU'}
+    if m.get('_gallery'):   # ImageGallery is a WebPage subtype: real job photos only, never reviews or ratings
+        page['@type'] = 'ImageGallery'
+        page['image'] = m['_gallery']
+        page['primaryImageOfPage'] = m['_gallery'][0]
     graph.append(page)
     if route:
         crumbs = [{'@type': 'ListItem', 'position': 1, 'name': 'Home', 'item': SITE},
@@ -372,6 +392,7 @@ def build_page(meta, body):
     else:
         body = body.replace('{{CRUMBS}}', '')
     meta['_faqs'] = faqs_from(body)
+    meta['_gallery'] = gallery_from(body) if meta.get('gallery') else []
     return head(meta, route) + header(route) + body + footer(route, meta)
 
 
@@ -431,6 +452,9 @@ def main():
 - [Wardrobe Assembly]({SITE}wardrobe-assembly/): IKEA PAX and other sliding-door, walk-in, free-standing and fitted wardrobes, anchored to the wall.
 - [Disassembly Service]({SITE}disassembly-service/): careful dismantling for moves, fittings bagged and labelled per item, optional re-assembly.
 - [IKEA Kitchen Assembly]({SITE}ikea-kitchen-assembly/): assembly of IKEA METOD kitchen cabinets (carcasses, doors, drawers, hinges, legs, plinths). No plumbing, electrical or benchtop work.
+
+## Our work
+- [Our work]({SITE}our-work/): photos of real jobs by the Wyelee team, taken on the job — IKEA PAX wardrobes (lit interiors, six-door, walk-in, corner), an IKEA BESTÅ TV wall unit, IKEA HEMNES and MALM beds, storage beds with LED headboards, an IKEA MALM chest of drawers and an office meeting room. Filter by wardrobes, beds, storage & TV units or office.
 
 ## Get a quote
 - [Quote form]({SITE}quote/): suburb and postcode, brand (IKEA, Kmart and other stores), items (name, article number or link), condition, photos, preferred days — quote within 24 hours.

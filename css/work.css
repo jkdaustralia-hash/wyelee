@@ -1,0 +1,108 @@
+/* ==========================================================================
+   Wyelee — /our-work/ : job sheets, type filter and photo viewer.
+   Loaded only by _src/our-work.html (meta "css"); behaviour in js/work.js.
+   ========================================================================== */
+
+/* ---------- hero: standard page-hero split; Fig. 0 = job 01's overview shot, linked to its sheet ---------- */
+.work-hero .lead { margin-bottom: 20px; }
+.work-hero .photo-wide { display: block; border-radius: 8px; }
+.work-hero .photo-wide:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+
+/* ---------- type filter (buttons with aria-pressed; hidden without JS, where every job shows) ---------- */
+.work-filter { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: clamp(28px, 4vw, 44px); }
+.no-js .work-filter { display: none; }
+.work-filter-label { margin-right: 6px; font-family: var(--font-display); font-weight: 800; font-size: .8rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-2); }
+.work-filter button {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 14px 8px 16px; border-radius: var(--r-pill);
+  border: 1.5px solid var(--line-2); background: #fff; font-family: var(--font-display); font-weight: 800; font-size: .95rem; line-height: 1.1; color: var(--ink);
+  transition: background .15s, border-color .15s, color .15s;
+}
+.work-filter button:hover { border-color: var(--navy); }
+.work-filter button[aria-pressed="true"] { background: var(--navy); border-color: var(--navy); color: #fff; }
+.work-filter .n { display: inline-grid; place-items: center; min-width: 24px; height: 24px; padding: 0 7px; border-radius: var(--r-pill); background: var(--fog); color: var(--ink-2); font-size: .78rem; font-variant-numeric: tabular-nums; }
+.work-filter [aria-pressed="true"] .n { background: rgba(255, 255, 255, .16); color: #fff; }
+/* phones: drop the visible "Show" label (the group keeps its aria-label) so the chips fit on two rows */
+@media (max-width: 559px) {
+  .work-filter { gap: 6px; }
+  .work-filter-label { display: none; }
+  .work-filter button { padding: 8px 12px 8px 14px; }
+}
+
+/* ---------- job sheets: 1 column, 2 from 900 px; rows aligned with subgrid where supported ---------- */
+.jobs { display: grid; gap: 56px 40px; }
+@media (min-width: 900px) { .jobs { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.job { display: flex; flex-direction: column; min-width: 0; padding-top: 14px; border-top: 1.5px solid var(--navy); scroll-margin-top: calc(var(--header-h) + 16px); }
+.job[hidden] { display: none; }
+@media (min-width: 900px) {
+  @supports (grid-template-rows: subgrid) {
+    /* head / title / description / figure share their row with the neighbouring sheet, so the photos line up */
+    .job { display: grid; grid-row: span 4; grid-template-rows: subgrid; row-gap: 0; align-content: start; }
+    /* no auto margin here: it would pin the shorter figure to the row bottom; both frames start at the row top */
+    .job .job-fig { margin-top: 0; align-self: stretch; align-content: start; }
+  }
+}
+.job-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; margin-bottom: 14px; }
+.job-no { display: inline-flex; align-items: center; gap: 10px; margin: 0; font-family: var(--font-display); font-weight: 800; font-size: .8rem; letter-spacing: .12em; text-transform: uppercase; color: var(--green-text); }
+.job-no b { display: inline-grid; place-items: center; min-width: 38px; height: 30px; padding: 0 7px; border-radius: 8px; background: var(--navy); color: #fff; font-size: .95rem; letter-spacing: .02em; font-variant-numeric: tabular-nums; }
+.job-tags { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.job-tags li { padding: 4px 11px; border-radius: var(--r-pill); border: 1.5px solid var(--line-2); background: #fff; font-family: var(--font-display); font-weight: 800; font-size: .78rem; letter-spacing: .02em; color: var(--ink-2); }
+.job-tags li.ikea { border-color: var(--navy); color: var(--navy); }
+.job h2 { margin: 0 0 .35em; font-size: clamp(1.35rem, 2.3vw, 1.75rem); line-height: 1.15; }
+.job-desc { margin: 0 0 18px; color: var(--ink-2); max-width: 54ch; }
+
+/* figure: main photo (fixed 4:5 crop, the viewer shows it whole) / contact strip of the job's other photos / caption — stacked at every width */
+.job-fig { margin-top: auto; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-areas: "main" "thumbs" "cap"; align-items: start; align-content: start; }
+.job-fig .shot-main { grid-area: main; }
+.job-fig .job-thumbs { grid-area: thumbs; }
+.job-fig figcaption { grid-area: cap; padding-top: 12px; }
+.shot { position: relative; display: block; overflow: hidden; border-radius: 8px; background: var(--fog); color: inherit; cursor: zoom-in; }
+.shot:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+.figure .shot-main img { width: 100%; height: auto; aspect-ratio: 4 / 5; object-fit: cover; border-radius: 0; transition: transform .5s var(--ease); }
+.shot-main:hover img { transform: scale(1.025); }
+.shot-zoom { position: absolute; right: 12px; bottom: 12px; display: grid; place-items: center; width: 42px; height: 42px; border-radius: var(--r-pill); background: rgba(255, 255, 255, .94); color: var(--navy); box-shadow: var(--shadow-sm); transition: transform .2s var(--ease); }
+.shot-zoom .ic { width: 22px; height: 22px; }
+.shot-main:hover .shot-zoom { transform: scale(1.08); }
+.job-thumbs { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.job-thumbs .shot { width: 72px; height: 72px; border: 1.5px solid var(--line-2); transition: border-color .15s; }
+.job-thumbs .shot:hover { border-color: var(--navy); }
+.figure .job-thumbs img { width: 100%; height: 100%; object-fit: cover; border-radius: 0; }
+.job-thumbs .shot.wide { width: 128px; } /* landscape photo: landscape box, so it still reads at thumbnail size */
+@media (max-width: 559px) { .job-thumbs .shot { width: 64px; height: 64px; } .job-thumbs .shot.wide { width: 112px; } }
+
+/* ---------- .job-wide: a job whose only photo is landscape — shown whole at 16:9 (never cropped to 4:5);
+   in the All view (no sheet hidden) it takes a full row, text left / photo right, so the 2-column grid stays paired.
+   Under a filter, or without :has(), it falls back to a normal half-width sheet. ---------- */
+.job-wide .figure .shot-main img { aspect-ratio: 16 / 9; object-position: 50% 50%; }
+@media (min-width: 900px) {
+  /* half-width (filtered) sheet: the frame hugs the 16:9 photo instead of stretching to its 4:5 neighbour */
+  @supports (grid-template-rows: subgrid) { .job-wide .job-fig { align-self: start; } }
+  /* own rows (no subgrid): text stacks at the top of column 1, the photo spans column 2 */
+  .jobs:not(:has(> .job[hidden])) > .job-wide { display: grid; grid-column: 1 / -1; grid-row: auto; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); grid-template-rows: auto auto auto 1fr; column-gap: 40px; row-gap: 0; }
+  .jobs:not(:has(> .job[hidden])) > .job-wide > :not(.job-fig) { grid-column: 1; }
+  .jobs:not(:has(> .job[hidden])) > .job-wide > .job-fig { grid-column: 2; grid-row: 1 / span 4; margin-top: 0; align-self: start; }
+}
+
+/* ---------- photo viewer (<dialog> built by js/work.js) ---------- */
+html.viewer-open { overflow: hidden; }
+.viewer {
+  position: fixed; inset: 0; width: 100%; height: 100%; max-width: 100%; max-height: 100%; margin: 0; padding: 0; border: 0;
+  background: #120D2B; color: #fff; overscroll-behavior: contain;
+}
+/* minmax(0, 1fr) column: the title wraps inside it, never widening the dialog past the viewport */
+.viewer[open] { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto; animation: viewer-in .2s var(--ease); }
+@keyframes viewer-in { from { opacity: 0; } to { opacity: 1; } }
+.viewer::backdrop { background: rgba(18, 13, 43, .92); }
+.viewer-top { display: flex; align-items: center; gap: 14px; padding: max(10px, env(safe-area-inset-top)) var(--gutter) 10px; }
+.viewer-title { flex: 1; min-width: 0; margin: 0; color: #fff; font-size: 1rem; line-height: 1.3; letter-spacing: 0; overflow-wrap: anywhere; text-wrap: balance; }
+.viewer-title .fig { margin-right: 6px; color: #8ED99A; }
+.viewer-count { margin: 0; font-family: var(--font-display); font-weight: 800; font-size: .95rem; color: #D9D6E6; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.viewer-btn { flex: none; display: inline-grid; place-items: center; width: 48px; height: 48px; padding: 0; border-radius: var(--r-pill); border: 1.5px solid rgba(255, 255, 255, .32); background: rgba(255, 255, 255, .06); color: #fff; transition: background .15s, border-color .15s; }
+.viewer-btn:hover { background: rgba(255, 255, 255, .14); border-color: #fff; }
+.viewer-btn .ic { width: 22px; height: 22px; }
+.viewer-prev .ic { transform: scaleX(-1); }
+.viewer :focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+.viewer-stage { position: relative; min-height: 0; margin: 0 var(--gutter); touch-action: pan-y pinch-zoom; }
+.viewer-stage img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+.viewer-foot { display: flex; align-items: center; gap: 14px; padding: 12px var(--gutter) max(12px, env(safe-area-inset-bottom)); }
+.viewer-cap { flex: 1; min-width: 0; margin: 0; text-align: center; font-size: .95rem; line-height: 1.4; color: #D9D6E6; }
+.viewer.is-single .viewer-prev, .viewer.is-single .viewer-next { visibility: hidden; }
