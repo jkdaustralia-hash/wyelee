@@ -24,6 +24,7 @@ PHONE_TEL = '+61432470313'
 WA = 'https://wa.me/61432470313'
 WA_TEXT = 'Hi Wyelee, I would like a quote for furniture assembly.'
 EMAIL = 'Kenleong23@wyeleeassembly.com.au'
+FOOTER_EMAIL = 'hello@wyeleeassembly.com.au'   # correo general que se muestra en el pie de todas las páginas
 CITY = 'Sydney'
 AREAS = ['Adelaide', 'Sydney', 'Brisbane', 'Perth']
 YEAR = '2026'
@@ -284,7 +285,7 @@ def footer(route, m=None):
         <ul class="contact-list">
           <li>{ic('phone')}<a href="tel:{PHONE_TEL}">{PHONE_DISPLAY}</a></li>
           <li>{ic('wa')}<a href="{wa_href()}" target="_blank" rel="noopener">WhatsApp us</a></li>
-          <li>{ic('mail')}<a href="mailto:{EMAIL}">{EMAIL}</a></li>
+          <li>{ic('mail')}<a href="mailto:{FOOTER_EMAIL}">{FOOTER_EMAIL}</a></li>
           <li>{ic('pin')}<span>{CITY}, Australia</span></li>
         </ul>
       </div>
